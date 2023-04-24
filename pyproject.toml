@@ -53,7 +53,7 @@ cov = [
   "test-cov",
   "cov-report",
 ]
-hotreload = ["watchmedo.exe auto-restart --debounce-interval=10 --recursive -d wordspreader --pattern *.py flet.exe run -- wordspreader/main.py -p 8080 --hidden --web"]
+hotreload = ["flet.exe run wordspreader/main.py -p 8080 --hidden --web --recursive --directory"]
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
@@ -87,7 +87,7 @@ line-length = 120
 skip-string-normalization = true
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py311"
 line-length = 120
 select = [
   "A",
