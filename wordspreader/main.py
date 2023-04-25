@@ -13,25 +13,28 @@ from flet import (
     colors,
     icons,
 )
+from flet_core import ControlEvent
 
 
+# noinspection PyAttributeOutsideInit
 class Words(UserControl):
-    def __init__(self, task_name, task_status_change, task_delete):
+    def __init__(self, title: str, words: str, task_status_change=lambda e: None, task_delete=lambda e: None):
         super().__init__()
         self.completed = False
-        self.task_name = task_name
+        self.title = title
+        self.words = words
         self.task_status_change = task_status_change
         self.task_delete = task_delete
 
     def build(self):
-        self.display_task = Checkbox(value=False, label=self.task_name, on_change=self.status_changed)
+        self.display_words = Checkbox(value=False, label=self.title, on_change=self.status_changed)
         self.edit_name = TextField(expand=1)
 
         self.display_view = Row(
             alignment="spaceBetween",
             vertical_alignment="center",
             controls=[
-                self.display_task,
+                self.display_words,
                 Row(
                     spacing=0,
                     controls=[
@@ -67,19 +70,19 @@ class Words(UserControl):
         return Column(controls=[self.display_view, self.edit_view])
 
     def edit_clicked(self, e):
-        self.edit_name.value = self.display_task.label
+        self.edit_name.value = self.display_words.label
         self.display_view.visible = False
         self.edit_view.visible = True
         self.update()
 
     def save_clicked(self, e):
-        self.display_task.label = self.edit_name.value
+        self.display_words.label = self.edit_name.value
         self.display_view.visible = True
         self.edit_view.visible = False
         self.update()
 
     def status_changed(self, e):
-        self.completed = self.display_task.value
+        self.completed = self.display_words.value
         self.task_status_change(self)
 
     def delete_clicked(self, e):
@@ -89,15 +92,16 @@ class Words(UserControl):
 # noinspection PyAttributeOutsideInit
 class WordSpreader(UserControl):
     def build(self):
+        def on_clicked(e: ControlEvent):
+            print(e)
+
         self.new_title = TextField(
-            hint_text="Title the words.",
+            label="Title the words.",
             expand=True,
         )
-        self.new_words = TextField(
-            hint_text="Provide the words.",
-            expand=True,
-            multiline=True,
-        )
+        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True, on_submit=on_clicked)
+        self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
+
         self.tasks = Column()
 
         self.category = Tabs(
@@ -116,11 +120,7 @@ class WordSpreader(UserControl):
                         self.new_title,
                     ]
                 ),
-                Row(
-                    controls=[
-                        self.new_words,
-                    ]
-                ),
+                Row(controls=[self.new_words, self.add_new_words]),
                 Column(
                     spacing=25,
                     controls=[
@@ -133,7 +133,7 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, e):
         if self.new_title.value:
-            task = Words(self.new_title.value, self.task_status_change, self.task_delete)
+            task = Words(self.new_title.value, self.new_words.value, self.task_status_change, self.task_delete)
             self.tasks.controls.append(task)
             self.new_title.value = ""
             self.new_title.focus()
