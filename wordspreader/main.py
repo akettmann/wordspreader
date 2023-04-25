@@ -2,9 +2,7 @@ import flet
 from flet import (
     Checkbox,
     Column,
-    FloatingActionButton,
     IconButton,
-    OutlinedButton,
     Page,
     Row,
     Tab,
@@ -88,9 +86,13 @@ class Words(UserControl):
         self.task_delete(self)
 
 
+# noinspection PyAttributeOutsideInit
 class WordSpreader(UserControl):
     def build(self):
-        self.new_title = TextField(hint_text="Title the words.", on_submit=self.add_clicked, expand=True)
+        self.new_title = TextField(
+            hint_text="Title the words.",
+            expand=True,
+        )
         self.new_words = TextField(
             hint_text="Provide the words.",
             expand=True,
@@ -98,13 +100,11 @@ class WordSpreader(UserControl):
         )
         self.tasks = Column()
 
-        self.filter = Tabs(
+        self.category = Tabs(
             selected_index=0,
             on_change=self.tabs_changed,
-            tabs=[Tab(text="all"), Tab(text="active"), Tab(text="completed")],
+            tabs=[Tab(text="all")],
         )
-
-        self.items_left = Text("0 items left")
 
         # application's root control (i.e. "view") containing all other controls
         return Column(
@@ -124,16 +124,8 @@ class WordSpreader(UserControl):
                 Column(
                     spacing=25,
                     controls=[
-                        self.filter,
+                        self.category,
                         self.tasks,
-                        Row(
-                            alignment="spaceBetween",
-                            vertical_alignment="center",
-                            controls=[
-                                self.items_left,
-                                OutlinedButton(text="Clear completed", on_click=self.clear_clicked),
-                            ],
-                        ),
                     ],
                 ),
             ],
@@ -163,7 +155,7 @@ class WordSpreader(UserControl):
                 self.task_delete(task)
 
     def update(self):
-        status = self.filter.tabs[self.filter.selected_index].text
+        status = self.category.tabs[self.category.selected_index].text
         count = 0
         for task in self.tasks.controls:
             task.visible = (
@@ -173,7 +165,6 @@ class WordSpreader(UserControl):
             )
             if not task.completed:
                 count += 1
-        self.items_left.value = f"{count} active item(s) left"
         super().update()
 
 
