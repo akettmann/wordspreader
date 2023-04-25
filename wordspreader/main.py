@@ -16,7 +16,7 @@ from flet import (
 from flet_core import ControlEvent
 
 
-# noinspection PyAttributeOutsideInit
+# noinspection PyAttributeOutsideInit,PyUnusedLocal
 class Words(UserControl):
     def __init__(self, title: str, words: str, task_status_change=lambda e: None, task_delete=lambda e: None):
         super().__init__()
@@ -38,6 +38,7 @@ class Words(UserControl):
                 Row(
                     spacing=0,
                     controls=[
+                        IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
                         IconButton(
                             icon=icons.CREATE_OUTLINED,
                             tooltip="Edit Words",
@@ -88,8 +89,11 @@ class Words(UserControl):
     def delete_clicked(self, e):
         self.task_delete(self)
 
+    def set_clip(self, e: ControlEvent):
+        self.page.set_clipboard(self.words)
 
-# noinspection PyAttributeOutsideInit
+
+# noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
     def build(self):
         def on_clicked(e: ControlEvent):
@@ -133,9 +137,10 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, e):
         if self.new_title.value:
-            task = Words(self.new_title.value, self.new_words.value, self.task_status_change, self.task_delete)
-            self.tasks.controls.append(task)
+            words = Words(self.new_title.value, self.new_words.value, self.task_status_change, self.task_delete)
+            self.tasks.controls.append(words)
             self.new_title.value = ""
+            self.new_words.value = ""
             self.new_title.focus()
             self.update()
 
