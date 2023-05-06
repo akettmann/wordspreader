@@ -25,7 +25,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "flet"
+  "flet",
+  "sqlalchemy"
 ]
 
 [project.urls]
