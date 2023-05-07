@@ -56,6 +56,15 @@ class DBPersistence:
             # Might fail due to duplicate key
             self._rename_word(name, new_name)
 
+    def get_words_filtered(self, category: str = None):
+        query = select(Word)
+        if category is not None:
+            query.where(Word.tags.contains(category))
+
+        with self._get_session() as session:
+            for word in session.execute(query):
+                yield word
+
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""
         with self._get_session() as session:
