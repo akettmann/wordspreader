@@ -18,13 +18,11 @@ from flet_core import ControlEvent
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class Words(UserControl):
-    def __init__(self, title: str, words: str, task_status_change=lambda e: None, task_delete=lambda e: None):
+    def __init__(self, title: str, words: str):
         super().__init__()
-        self.completed = False
+
         self.title = title
         self.words = words
-        self.task_status_change = task_status_change
-        self.task_delete = task_delete
 
     def build(self):
         self.display_words = Checkbox(value=False, label=self.title, on_change=self.status_changed)
@@ -137,7 +135,7 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, e):
         if self.new_title.value:
-            words = Words(self.new_title.value, self.new_words.value, self.task_status_change, self.task_delete)
+            words = Words(self.new_title.value, self.new_words.value)
             self.tasks.controls.append(words)
             self.new_title.value = ""
             self.new_words.value = ""
@@ -168,8 +166,7 @@ class WordSpreader(UserControl):
                 or (status == "active" and task.completed is False)
                 or (status == "completed" and task.completed)
             )
-            if not task.completed:
-                count += 1
+
         super().update()
 
 
