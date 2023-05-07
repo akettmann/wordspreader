@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from typing import List
 
+from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
-from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select, Uuid
 
 
 class DuplicateKeyException(BaseException):
@@ -17,7 +18,7 @@ association_table = Table(
     "word_to_tag",
     Base.metadata,
     Column("word_name", ForeignKey("word.name")),
-    Column("tag_id", ForeignKey("tag.id")),
+    Column("tag_name", ForeignKey("tag.name")),
 )
 
 
@@ -30,8 +31,7 @@ class Word(Base):
 
 class Tag(Base):
     __tablename__ = 'tag'
-    guid: Mapped[Uuid] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
 
 
 class DBPersistence:
