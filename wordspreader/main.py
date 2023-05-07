@@ -168,7 +168,7 @@ class WordSpreader(UserControl):
         self.new_words = TextField(label="Provide the words.", expand=True, multiline=True, on_submit=on_clicked)
         self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
 
-        self.tasks = Column()
+        self.tasks = Column(controls=[Words(word.name, word.content) for word in self.db.get_words_filtered()])
 
         self.category = Tabs(
             selected_index=0,
