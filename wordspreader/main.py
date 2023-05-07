@@ -34,8 +34,8 @@ class Words(UserControl):
         self.edit_name = TextField(expand=1)
 
         self.display_view = Row(
-            alignment="spaceBetween",
-            vertical_alignment="center",
+            alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=flet.CrossAxisAlignment.CENTER,
             controls=[
                 self.display_words,
                 Row(
@@ -59,8 +59,8 @@ class Words(UserControl):
 
         self.edit_view = Row(
             visible=False,
-            alignment="spaceBetween",
-            vertical_alignment="center",
+            alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=flet.CrossAxisAlignment.CENTER,
             controls=[
                 self.edit_name,
                 IconButton(
