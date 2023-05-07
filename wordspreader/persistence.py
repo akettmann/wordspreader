@@ -23,8 +23,8 @@ association_table = Table(
 
 class Word(Base):
     __tablename__ = 'word'
-    name: Mapped[str] = mapped_column(String(100))
-    content: Mapped[str] = mapped_column(String(2000), primary_key=True, unique=True)
+    name: Mapped[str] = mapped_column(String(100), primary_key=True, unique=True)
+    content: Mapped[str] = mapped_column(String(2000))
     tags: Mapped[List[Tag]] = relationship(secondary=association_table)
 
 
@@ -47,7 +47,11 @@ class DBPersistence:
     async def update_word(self, name: str, content: str = None, tags: list[Tag] = None, new_name: str = None):
         """Update the word with the content, tags, new name, or all three"""
         # This first, less likely to fail
-        await self._update_word(name, content, tags)
+        # specifically tags is not None, because setting the list of tags to `[]` is legal
+        # and a change (remove all tags from object)
+        # Also content is not allowed to be null
+        if content is not None or tags is not None:
+            await self._update_word(name, content, tags)
         if new_name:
             # Might fail due to duplicate key
             await self._rename_word(name, new_name)
@@ -67,8 +71,12 @@ class DBPersistence:
         """Doesn't change primary key, just content and/or tags"""
         with await self._get_session() as session:
             word = await self._get_word(name)
-            word.content = content or word.content
-            word.tags = tags or word.tags
+            if isinstance(content, str):
+                # If it is a str, even empty, we need to assign it, though an empty list evals as falsey
+                word.content = content
+            if isinstance(tags, list):
+                # If it is a list, even empty, we need to assign it, though an empty list evals as falsey
+                word.tags = tags
             session.add(word)
             session.commit()
 
