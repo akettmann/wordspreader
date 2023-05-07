@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List
 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
-from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select
+from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select, Uuid
 
 
 class DuplicateKeyException(BaseException):
@@ -30,7 +30,7 @@ class Word(Base):
 
 class Tag(Base):
     __tablename__ = 'tag'
-    id: Mapped[int] = mapped_column(primary_key=True)
+    guid: Mapped[Uuid] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
 
 
@@ -38,27 +38,27 @@ class DBPersistence:
     def __init__(self):
         self.engine = create_engine('sqlite:///dumb-example-db.sqlite3')
 
-    async def new_word(self, name: str, content: str, tags: list[Tag] = None):
+    def new_word(self, name: str, content: str, tags: list[Tag] = None):
         word = Word(name=name, content=content, tags=tags or [])
-        with await self._get_session() as session:
+        with self._get_session() as session:
             session.add(word)
             session.commit()
 
-    async def update_word(self, name: str, content: str = None, tags: list[Tag] = None, new_name: str = None):
+    def update_word(self, name: str, content: str = None, tags: list[Tag] = None, new_name: str = None):
         """Update the word with the content, tags, new name, or all three"""
         # This first, less likely to fail
         # specifically tags is not None, because setting the list of tags to `[]` is legal
         # and a change (remove all tags from object)
         # Also content is not allowed to be null
         if content is not None or tags is not None:
-            await self._update_word(name, content, tags)
+            self._update_word(name, content, tags)
         if new_name:
             # Might fail due to duplicate key
-            await self._rename_word(name, new_name)
+            self._rename_word(name, new_name)
 
-    async def _rename_word(self, old_name: str, new_name: str):
+    def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""
-        with await self._get_session() as session:
+        with self._get_session() as session:
             maybe_new_word = session.execute(select(Word).where(Word.name == new_name)).scalar_one_or_none()
             if maybe_new_word:
                 raise DuplicateKeyException(f'New name: `{new_name}` is already taken, pick another name"')
@@ -67,10 +67,10 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    async def _update_word(self, name: str, content: str = None, tags: list[Tag] = None):
+    def _update_word(self, name: str, content: str = None, tags: list[Tag] = None):
         """Doesn't change primary key, just content and/or tags"""
-        with await self._get_session() as session:
-            word = await self._get_word(name)
+        with self._get_session() as session:
+            word = self._get_word(name)
             if isinstance(content, str):
                 # If it is a str, even empty, we need to assign it, though an empty list evals as falsey
                 word.content = content
@@ -80,12 +80,12 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    async def _get_word(self, name: str) -> Word:
-        with await self._get_session() as session:
+    def _get_word(self, name: str) -> Word:
+        with self._get_session() as session:
             return session.execute(select(Word).where(Word.name == name)).scalar_one()
 
-    async def _get_session(self) -> Session:
+    def _get_session(self) -> Session:
         return Session(self.engine)
 
-    async def _create_dbs(self):
+    def _create_dbs(self):
         Base.metadata.create_all(self.engine)
