@@ -1,3 +1,5 @@
+from typing import Optional, List, Union, Any
+
 import flet
 from flet import (
     Checkbox,
@@ -13,7 +15,10 @@ from flet import (
     colors,
     icons,
 )
-from flet_core import ControlEvent
+from flet_core import ControlEvent, Control, Ref, OptionalNumber, ClipBehavior
+from flet_core.types import ResponsiveNumber, RotateValue, ScaleValue, OffsetValue, AnimationValue
+
+from wordspreader.persistence import DBPersistence
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
@@ -93,6 +98,65 @@ class Words(UserControl):
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
+    def __init__(
+        self,
+        controls: Optional[List[Control]] = None,
+        ref: Optional[Ref] = None,
+        width: OptionalNumber = None,
+        height: OptionalNumber = None,
+        left: OptionalNumber = None,
+        top: OptionalNumber = None,
+        right: OptionalNumber = None,
+        bottom: OptionalNumber = None,
+        expand: Union[None, bool, int] = None,
+        col: Optional[ResponsiveNumber] = None,
+        opacity: OptionalNumber = None,
+        rotate: RotateValue = None,
+        scale: ScaleValue = None,
+        offset: OffsetValue = None,
+        aspect_ratio: OptionalNumber = None,
+        animate_opacity: AnimationValue = None,
+        animate_size: AnimationValue = None,
+        animate_position: AnimationValue = None,
+        animate_rotation: AnimationValue = None,
+        animate_scale: AnimationValue = None,
+        animate_offset: AnimationValue = None,
+        on_animation_end=None,
+        visible: Optional[bool] = None,
+        disabled: Optional[bool] = None,
+        data: Any = None,
+        clip_behavior: Optional[ClipBehavior] = None,
+    ):
+        super().__init__(
+            controls,
+            ref,
+            width,
+            height,
+            left,
+            top,
+            right,
+            bottom,
+            expand,
+            col,
+            opacity,
+            rotate,
+            scale,
+            offset,
+            aspect_ratio,
+            animate_opacity,
+            animate_size,
+            animate_position,
+            animate_rotation,
+            animate_scale,
+            animate_offset,
+            on_animation_end,
+            visible,
+            disabled,
+            data,
+            clip_behavior,
+        )
+        self.db = DBPersistence()
+
     def build(self):
         def on_clicked(e: ControlEvent):
             print(e)
@@ -116,7 +180,10 @@ class WordSpreader(UserControl):
         return Column(
             width=600,
             controls=[
-                Row([Text(value="Words to Spread", style="headlineMedium")], alignment="center"),
+                Row(
+                    [Text(value="Words to Spread", style=flet.TextThemeStyle.HEADLINE_MEDIUM)],
+                    alignment=flet.MainAxisAlignment.CENTER,
+                ),
                 Row(
                     controls=[
                         self.new_title,
