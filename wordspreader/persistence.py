@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from pathlib import Path
 from typing import List
 
 from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select
@@ -36,8 +37,9 @@ class Tag(Base):
 
 
 class DBPersistence:
-    def __init__(self):
-        self.engine = create_engine('sqlite:///dumb-example-db.sqlite3')
+    def __init__(self, db_file: Path):
+        self.engine = create_engine(f'sqlite:///{db_file.resolve().absolute()}')
+        Base.metadata.create_all(self.engine)
 
     def new_word(self, name: str, content: str, tags: list[Tag] = None):
         word = Word(name=name, content=content, tags=tags or [])
