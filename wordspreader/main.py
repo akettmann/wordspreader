@@ -155,7 +155,10 @@ class WordSpreader(UserControl):
             data,
             clip_behavior,
         )
-        self.db = DBPersistence()
+        self.dirs = appdirs.AppDirs('WordSpreader', 'mriswithe')
+        self.db_file = Path(self.dirs.user_data_dir) / 'wordspreader.sqlite3'
+        self.db_file.parent.mkdir(parents=True, exist_ok=True)
+        self.db = DBPersistence(self.db_file)
 
     def build(self):
         def on_clicked(e: ControlEvent):
