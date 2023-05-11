@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import appdirs
 import flet
@@ -108,7 +108,7 @@ class Words(UserControl):
         )
         return Column(controls=[self.display_view, self.edit_view])
 
-    def edit_words_clicked(self, e):
+    def edit_words_clicked(self, _):
         self.edit_stuff.value = self.words
         self.display_view.visible = False
         self.edit_view.visible = True
@@ -116,7 +116,7 @@ class Words(UserControl):
         self.editing = "words"
         self.update()
 
-    def edit_title_clicked(self, e):
+    def edit_title_clicked(self, _):
         self.edit_stuff.value = self.title
         self.display_view.visible = False
         self.edit_view.visible = True
@@ -124,7 +124,7 @@ class Words(UserControl):
         self.editing = "title"
         self.update()
 
-    def save_clicked(self, e):
+    def save_clicked(self, _):
         new = self.edit_stuff.value
         if self.editing == "title":
             self.title = new
@@ -134,7 +134,7 @@ class Words(UserControl):
             raise RuntimeError()
         self.cancel_clicked()
 
-    def delete_clicked(self, _: ControlEvent):
+    def delete_clicked(self, _):
         self.delete_me(self)
 
     def cancel_clicked(self, _: ControlEvent = None):
@@ -143,7 +143,7 @@ class Words(UserControl):
         self.editing = None
         self.update()
 
-    def set_clip(self, e: ControlEvent):
+    def set_clip(self, _):
         self.page.set_clipboard(self.words)
 
 
@@ -261,7 +261,7 @@ class WordSpreader(UserControl):
             ],
         )
 
-    def add_clicked(self, e):
+    def add_clicked(self, _):
         if self.new_title.value:
             words = Words(
                 self.new_title.value,
@@ -281,7 +281,7 @@ class WordSpreader(UserControl):
         self.tasks.controls.remove(words)
         self.update()
 
-    def tabs_changed(self, e):
+    def tabs_changed(self, _):
         self.update()
 
     def update(self):

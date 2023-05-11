@@ -76,7 +76,8 @@ class DBPersistence:
         with self._get_session() as session:
             maybe_new_word = session.execute(select(Word).where(Word.name == new_name)).scalar_one_or_none()
             if maybe_new_word:
-                raise DuplicateKeyException(f'New name: `{new_name}` is already taken, pick another name"')
+                msg = f'New name: `{new_name}` is already taken, pick another name"'
+                raise DuplicateKeyException(msg)
             word = session.execute(select(Word).where(Word.name == old_name)).scalar_one()
             word.name = new_name
             session.add(word)
