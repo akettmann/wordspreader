@@ -1,8 +1,10 @@
+from functools import partial
+from pathlib import Path
 from typing import Optional, List, Union, Any
 
+import appdirs
 import flet
 from flet import (
-    Checkbox,
     Column,
     IconButton,
     Page,
@@ -23,15 +25,39 @@ from wordspreader.persistence import DBPersistence
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class Words(UserControl):
-    def __init__(self, title: str, words: str):
+    def __init__(self, title: str, words: str, edit_me: callable, delete_me: callable):
         super().__init__()
 
-        self.title = title
-        self.words = words
+        self._title = title
+        self._words = words
+        self.delete_me = delete_me
+        self.edit_me = edit_me
+
+    @property
+    def words(self):
+        return self._words
+
+    @words.setter
+    def words(self, value):
+        self.edit_me(content=value)
+        self._words = value
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self.edit_me(new_name=value)
+        self._title = value
+
+        self.display_words.value = value
+        self.display_words.update()
 
     def build(self):
-        self.display_words = Checkbox(value=False, label=self.title, on_change=self.status_changed)
-        self.edit_name = TextField(expand=1)
+        self.display_words = Text(self.title)
+        # This is used for either title or content
+        self.edit_stuff = TextField(expand=1)
 
         self.display_view = Row(
             alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
@@ -45,7 +71,12 @@ class Words(UserControl):
                         IconButton(
                             icon=icons.CREATE_OUTLINED,
                             tooltip="Edit Words",
-                            on_click=self.edit_clicked,
+                            on_click=self.edit_words_clicked,
+                        ),
+                        IconButton(
+                            icon=icons.TITLE,
+                            tooltip='Edit Title',
+                            on_click=self.edit_title_clicked,
                         ),
                         IconButton(
                             icons.DELETE_OUTLINE,
@@ -62,35 +93,55 @@ class Words(UserControl):
             alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=flet.CrossAxisAlignment.CENTER,
             controls=[
-                self.edit_name,
+                self.edit_stuff,
+                IconButton(
+                    icon=icons.CANCEL_OUTLINED,
+                    icon_color=colors.RED,
+                    on_click=self.cancel_clicked,
+                ),
                 IconButton(
                     icon=icons.DONE_OUTLINE_OUTLINED,
                     icon_color=colors.GREEN,
-                    tooltip="Update To-Do",
                     on_click=self.save_clicked,
                 ),
             ],
         )
         return Column(controls=[self.display_view, self.edit_view])
 
-    def edit_clicked(self, e):
-        self.edit_name.value = self.display_words.label
+    def edit_words_clicked(self, e):
+        self.edit_stuff.value = self.words
         self.display_view.visible = False
         self.edit_view.visible = True
+        self.edit_stuff.tooltip = 'Update words'
+        self.editing = 'words'
+        self.update()
+
+    def edit_title_clicked(self, e):
+        self.edit_stuff.value = self.title
+        self.display_view.visible = False
+        self.edit_view.visible = True
+        self.edit_stuff.tooltip = 'Update title'
+        self.editing = 'title'
         self.update()
 
     def save_clicked(self, e):
-        self.display_words.label = self.edit_name.value
+        new = self.edit_stuff.value
+        if self.editing == 'title':
+            self.title = new
+        elif self.editing == 'words':
+            self.words = new
+        else:
+            raise RuntimeError()
+        self.cancel_clicked()
+
+    def delete_clicked(self, _: ControlEvent):
+        self.delete_me(self)
+
+    def cancel_clicked(self, _: ControlEvent = None):
         self.display_view.visible = True
         self.edit_view.visible = False
+        self.editing = None
         self.update()
-
-    def status_changed(self, e):
-        self.completed = self.display_words.value
-        self.task_status_change(self)
-
-    def delete_clicked(self, e):
-        self.task_delete(self)
 
     def set_clip(self, e: ControlEvent):
         self.page.set_clipboard(self.words)
@@ -161,17 +212,24 @@ class WordSpreader(UserControl):
         self.db = DBPersistence(self.db_file)
 
     def build(self):
-        def on_clicked(e: ControlEvent):
-            print(e)
-
         self.new_title = TextField(
             label="Title the words.",
             expand=True,
         )
-        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True, on_submit=on_clicked)
+        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True)
         self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
 
-        self.tasks = Column(controls=[Words(word.name, word.content) for word in self.db.get_words_filtered()])
+        self.tasks = Column(
+            controls=[
+                Words(
+                    word.name,
+                    word.content,
+                    partial(self.db.update_word, word.name),
+                    self.delete_words,
+                )
+                for word in self.db.get_words_filtered()
+            ]
+        )
 
         self.category = Tabs(
             selected_index=0,
@@ -205,27 +263,26 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, e):
         if self.new_title.value:
-            words = Words(self.new_title.value, self.new_words.value)
+            words = Words(
+                self.new_title.value,
+                self.new_words.value,
+                partial(self.db.update_word, self.new_title.value),
+                self.delete_words,
+            )
+            self.db.new_word(self.new_title.value, self.new_words.value)
             self.tasks.controls.append(words)
             self.new_title.value = ""
             self.new_words.value = ""
             self.new_title.focus()
             self.update()
 
-    def task_status_change(self, task):
-        self.update()
-
-    def task_delete(self, task):
-        self.tasks.controls.remove(task)
+    def delete_words(self, words: Words):
+        self.db.delete_word(words.title)
+        self.tasks.controls.remove(words)
         self.update()
 
     def tabs_changed(self, e):
         self.update()
-
-    def clear_clicked(self, e):
-        for task in self.tasks.controls[:]:
-            if task.completed:
-                self.task_delete(task)
 
     def update(self):
         status = self.category.tabs[self.category.selected_index].text
@@ -241,14 +298,11 @@ class WordSpreader(UserControl):
 
 
 def main(page: Page):
-    page.title = "ToDo App"
+    page.title = "Word Spreader"
     page.horizontal_alignment = "center"
     page.scroll = "adaptive"
-    page.update()
-
     # create application instance
     app = WordSpreader()
-
     # add application's root control to the page
     page.add(app)
 

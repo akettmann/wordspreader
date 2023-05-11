@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import List
 
-from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select
+from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
 
 
@@ -58,6 +58,11 @@ class DBPersistence:
         if new_name:
             # Might fail due to duplicate key
             self._rename_word(name, new_name)
+
+    def delete_word(self, name: str):
+        with self._get_session() as session:
+            out = session.execute(delete(Word).where(Word.name == name))
+            session.commit()
 
     def get_words_filtered(self, category: str = None) -> Iterator[Word]:
         query = select(Word)

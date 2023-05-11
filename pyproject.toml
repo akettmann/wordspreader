@@ -26,7 +26,8 @@ classifiers = [
 ]
 dependencies = [
   "flet",
-  "sqlalchemy"
+  "sqlalchemy",
+  "appdirs"
 ]
 
 [project.urls]
