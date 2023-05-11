@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import List
 
-from sqlalchemy import String, ForeignKey, Column, Table, create_engine, select, delete
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
+from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
 class DuplicateKeyException(BaseException):
@@ -25,20 +24,20 @@ association_table = Table(
 
 
 class Word(Base):
-    __tablename__ = 'word'
+    __tablename__ = "word"
     name: Mapped[str] = mapped_column(String(100), primary_key=True, unique=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tags: Mapped[List[Tag]] = relationship(secondary=association_table)
+    tags: Mapped[list[Tag]] = relationship(secondary=association_table)
 
 
 class Tag(Base):
-    __tablename__ = 'tag'
+    __tablename__ = "tag"
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
 
 
 class DBPersistence:
     def __init__(self, db_file: Path):
-        self.engine = create_engine(f'sqlite:///{db_file.resolve().absolute()}')
+        self.engine = create_engine(f"sqlite:///{db_file.resolve().absolute()}")
         Base.metadata.create_all(self.engine)
 
     def new_word(self, name: str, content: str, tags: list[Tag] = None):
@@ -70,8 +69,7 @@ class DBPersistence:
             query.where(Word.tags.contains(category))
 
         with self._get_session() as session:
-            for word in session.scalars(query):
-                yield word
+            yield from session.scalars(query)
 
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""

@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Optional, List, Union, Any
+from typing import Any, List, Optional, Union
 
 import appdirs
 import flet
@@ -17,8 +17,8 @@ from flet import (
     colors,
     icons,
 )
-from flet_core import ControlEvent, Control, Ref, OptionalNumber, ClipBehavior
-from flet_core.types import ResponsiveNumber, RotateValue, ScaleValue, OffsetValue, AnimationValue
+from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
+from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 from wordspreader.persistence import DBPersistence
 
@@ -75,7 +75,7 @@ class Words(UserControl):
                         ),
                         IconButton(
                             icon=icons.TITLE,
-                            tooltip='Edit Title',
+                            tooltip="Edit Title",
                             on_click=self.edit_title_clicked,
                         ),
                         IconButton(
@@ -112,23 +112,23 @@ class Words(UserControl):
         self.edit_stuff.value = self.words
         self.display_view.visible = False
         self.edit_view.visible = True
-        self.edit_stuff.tooltip = 'Update words'
-        self.editing = 'words'
+        self.edit_stuff.tooltip = "Update words"
+        self.editing = "words"
         self.update()
 
     def edit_title_clicked(self, e):
         self.edit_stuff.value = self.title
         self.display_view.visible = False
         self.edit_view.visible = True
-        self.edit_stuff.tooltip = 'Update title'
-        self.editing = 'title'
+        self.edit_stuff.tooltip = "Update title"
+        self.editing = "title"
         self.update()
 
     def save_clicked(self, e):
         new = self.edit_stuff.value
-        if self.editing == 'title':
+        if self.editing == "title":
             self.title = new
-        elif self.editing == 'words':
+        elif self.editing == "words":
             self.words = new
         else:
             raise RuntimeError()
@@ -151,16 +151,16 @@ class Words(UserControl):
 class WordSpreader(UserControl):
     def __init__(
         self,
-        controls: Optional[List[Control]] = None,
-        ref: Optional[Ref] = None,
+        controls: list[Control] | None = None,
+        ref: Ref | None = None,
         width: OptionalNumber = None,
         height: OptionalNumber = None,
         left: OptionalNumber = None,
         top: OptionalNumber = None,
         right: OptionalNumber = None,
         bottom: OptionalNumber = None,
-        expand: Union[None, bool, int] = None,
-        col: Optional[ResponsiveNumber] = None,
+        expand: None | bool | int = None,
+        col: ResponsiveNumber | None = None,
         opacity: OptionalNumber = None,
         rotate: RotateValue = None,
         scale: ScaleValue = None,
@@ -173,10 +173,10 @@ class WordSpreader(UserControl):
         animate_scale: AnimationValue = None,
         animate_offset: AnimationValue = None,
         on_animation_end=None,
-        visible: Optional[bool] = None,
-        disabled: Optional[bool] = None,
+        visible: bool | None = None,
+        disabled: bool | None = None,
         data: Any = None,
-        clip_behavior: Optional[ClipBehavior] = None,
+        clip_behavior: ClipBehavior | None = None,
     ):
         super().__init__(
             controls,
@@ -206,8 +206,8 @@ class WordSpreader(UserControl):
             data,
             clip_behavior,
         )
-        self.dirs = appdirs.AppDirs('WordSpreader', 'mriswithe')
-        self.db_file = Path(self.dirs.user_data_dir) / 'wordspreader.sqlite3'
+        self.dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
+        self.db_file = Path(self.dirs.user_data_dir) / "wordspreader.sqlite3"
         self.db_file.parent.mkdir(parents=True, exist_ok=True)
         self.db = DBPersistence(self.db_file)
 
@@ -286,7 +286,6 @@ class WordSpreader(UserControl):
 
     def update(self):
         status = self.category.tabs[self.category.selected_index].text
-        count = 0
         for task in self.tasks.controls:
             task.visible = (
                 status == "all"
