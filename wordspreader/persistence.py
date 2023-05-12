@@ -108,7 +108,8 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def _get_word(self, session: Session, name: str, for_update: bool = False) -> Word:
+    @staticmethod
+    def _get_word(session: Session, name: str, for_update: bool = False) -> Word:
         query = select(Word).where(Word.name == name)
         if for_update:
             query.with_for_update()
