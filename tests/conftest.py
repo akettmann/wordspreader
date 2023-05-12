@@ -17,3 +17,13 @@ def db_factory():
         return DBPersistence(create_engine('sqlite:///:memory:'))
 
     return factory
+
+
+@fixture(scope='session')
+def app_factory(db_factory):
+    def factory():
+        from wordspreader.main import WordSpreader
+
+        return WordSpreader(db_factory())
+
+    return factory

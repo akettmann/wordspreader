@@ -151,6 +151,7 @@ class Words(UserControl):
 class WordSpreader(UserControl):
     def __init__(
         self,
+        db: DBPersistence,
         controls: list[Control] | None = None,
         ref: Ref | None = None,
         width: OptionalNumber = None,
@@ -206,10 +207,16 @@ class WordSpreader(UserControl):
             data,
             clip_behavior,
         )
-        self.dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
-        self.db_file = Path(self.dirs.user_data_dir) / "wordspreader.sqlite3"
-        self.db_file.parent.mkdir(parents=True, exist_ok=True)
-        self.db = DBPersistence.from_file(self.db_file)
+
+        self.db = db
+
+    @classmethod
+    def default_app_dir_db(cls):
+        """Creates an instance using the default"""
+        dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
+        db_file = Path(dirs.user_data_dir) / "wordspreader.sqlite3"
+        db_file.parent.mkdir(parents=True, exist_ok=True)
+        return cls(DBPersistence.from_file(db_file))
 
     def build(self):
         self.new_title = TextField(
@@ -301,7 +308,7 @@ def main(page: Page):
     page.horizontal_alignment = "center"
     page.scroll = "adaptive"
     # create application instance
-    app = WordSpreader()
+    app = WordSpreader.default_app_dir_db()
     # add application's root control to the page
     page.add(app)
 
