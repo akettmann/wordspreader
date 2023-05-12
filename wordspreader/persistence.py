@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
+from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
@@ -36,9 +36,13 @@ class Tag(Base):
 
 
 class DBPersistence:
-    def __init__(self, db_file: Path):
-        self.engine = create_engine(f"sqlite:///{db_file.resolve().absolute()}")
+    def __init__(self, engine: Engine):
+        self.engine = engine
         Base.metadata.create_all(self.engine)
+
+    @classmethod
+    def from_file(cls, db_file: Path):
+        return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
     def new_word(self, name: str, content: str, tags: list[Tag] = None):
         word = Word(name=name, content=content, tags=tags or [])
