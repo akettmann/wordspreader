@@ -75,6 +75,14 @@ class DBPersistence:
         with self._get_session() as session:
             yield from session.scalars(query)
 
+    def get_word(self, name: str) -> Word:
+        with self._get_session() as session:
+            return self._get_word(session, name)
+
+    def get_words_like(self, name: str) -> Iterator[Word]:
+        with self._get_session() as session:
+            yield from session.execute(select(Word).where(Word.name.like(name))).scalars()
+
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""
         with self._get_session() as session:
@@ -90,7 +98,7 @@ class DBPersistence:
     def _update_word(self, name: str, content: str = None, tags: list[Tag] = None):
         """Doesn't change primary key, just content and/or tags"""
         with self._get_session() as session:
-            word = session.execute(select(Word).where(Word.name == name).with_for_update()).scalar_one()
+            word = self._get_word(session, name, True)
             if isinstance(content, str):
                 # If it is a str, even empty, we need to assign it, though an empty list evals as falsey
                 word.content = content
@@ -100,12 +108,12 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def _get_word(self, name: str, for_update=False) -> Word:
+    def _get_word(self, session: Session, name: str, for_update: bool = False) -> Word:
         query = select(Word).where(Word.name == name)
         if for_update:
             query.with_for_update()
-        with self._get_session() as session:
-            return session.execute(query).scalar_one()
+
+        return session.execute(query).scalar_one()
 
     def _get_session(self) -> Session:
         return Session(self.engine)
