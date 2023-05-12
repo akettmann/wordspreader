@@ -78,11 +78,11 @@ class DBPersistence:
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""
         with self._get_session() as session:
-            maybe_new_word = session.execute(select(Word).where(Word.name == new_name)).scalar_one_or_none()
+            maybe_new_word = session.execute(select(Word).where(Word.name == new_name))
             if maybe_new_word:
                 msg = f'New name: `{new_name}` is already taken, pick another name"'
                 raise DuplicateKeyException(msg)
-            word = session.execute(select(Word).where(Word.name == old_name)).scalar_one()
+            word = session.execute(select(Word).where(Word.name == old_name).with_for_update()).scalar_one()
             word.name = new_name
             session.add(word)
             session.commit()
@@ -90,7 +90,7 @@ class DBPersistence:
     def _update_word(self, name: str, content: str = None, tags: list[Tag] = None):
         """Doesn't change primary key, just content and/or tags"""
         with self._get_session() as session:
-            word = self._get_word(name)
+            word = self._get_word(name, True)
             if isinstance(content, str):
                 # If it is a str, even empty, we need to assign it, though an empty list evals as falsey
                 word.content = content
@@ -100,12 +100,12 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def _get_word(self, name: str) -> Word:
+    def _get_word(self, name: str, for_update=False) -> Word:
+        query = select(Word).where(Word.name == name)
+        if for_update:
+            query.with_for_update()
         with self._get_session() as session:
-            return session.execute(select(Word).where(Word.name == name)).scalar_one()
+            return session.execute(query).scalar_one()
 
     def _get_session(self) -> Session:
         return Session(self.engine)
-
-    def _create_dbs(self):
-        Base.metadata.create_all(self.engine)
