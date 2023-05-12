@@ -1,6 +1,6 @@
 import sqlalchemy.exc
-from _pytest import mark
-from pytest import raises
+
+from pytest import raises, mark
 from hypothesis import strategies as st, given
 
 
