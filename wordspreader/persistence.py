@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Column, Engine, ForeignKey, String, Table, create_engine, delete, select
+from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select, Uuid
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
@@ -27,7 +28,7 @@ class Word(Base):
     __tablename__ = "word"
     name: Mapped[str] = mapped_column(String(100), primary_key=True, unique=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tags: Mapped[list[Tag]] = relationship(secondary=association_table)
+    tags: Mapped[set[Tag]] = relationship(secondary=association_table, lazy='joined')
 
 
 class Tag(Base):
@@ -44,8 +45,8 @@ class DBPersistence:
     def from_file(cls, db_file: Path):
         return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
-    def new_word(self, name: str, content: str, tags: list[Tag] = None):
-        word = Word(name=name, content=content, tags=tags or [])
+    def new_word(self, name: str, content: str, tags: set[str] = None):
+        word = Word(name=name, content=content, tags={Tag(name=t) for t in tags})
         with self._get_session() as session:
             session.add(word)
             session.commit()
@@ -86,17 +87,17 @@ class DBPersistence:
     def add_tag_to_word(self, name: str, tag: str):
         with self._get_session() as session:
             word = self._get_word(session, name, for_update=True)
-            word.tags.append(tag)
+            word.tags.append(Tag(name=tag))
             session.commit()
 
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""
         with self._get_session() as session:
-            maybe_new_word = session.execute(select(Word).where(Word.name == new_name)).scalar_one_or_none()
+            maybe_new_word = self._get_word(session, new_name)
             if maybe_new_word:
                 msg = f'New name: `{new_name}` is already taken, pick another name"'
                 raise DuplicateKeyException(msg)
-            word = session.execute(select(Word).where(Word.name == old_name).with_for_update()).scalar_one()
+            word = self._get_word(session, old_name)
             word.name = new_name
             session.add(word)
             session.commit()
@@ -115,12 +116,12 @@ class DBPersistence:
             session.commit()
 
     @staticmethod
-    def _get_word(session: Session, name: str, for_update: bool = False) -> Word:
+    def _get_word(session: Session, name: str, for_update: bool = False) -> Word | None:
         query = select(Word).where(Word.name == name)
         if for_update:
             query.with_for_update()
 
-        return session.execute(query).scalar_one()
+        return session.execute(query).unique().scalar_one_or_none()
 
     def _get_session(self) -> Session:
         return Session(self.engine)

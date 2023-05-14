@@ -1,6 +1,7 @@
+import logging
 from functools import partial
 from pathlib import Path
-from typing import Any, Optional, List, Union
+from typing import Any
 
 import appdirs
 import flet
@@ -17,7 +18,7 @@ from flet import (
     colors,
     icons,
 )
-from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
+from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref, Stack
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 from wordspreader.persistence import DBPersistence
@@ -42,7 +43,7 @@ class Tag(UserControl):
 class Words(UserControl):
     def __init__(self, title: str, words: str, tags: list[str], edit_me: callable, delete_me: callable):
         super().__init__()
-        self.data = {''}
+
         self._title = title
         self._words = words
         self._tags = {}
@@ -123,7 +124,7 @@ class Words(UserControl):
                 ),
             ],
         )
-        return Column(controls=[self.display_view, self.edit_view])
+        return Stack(controls=[self.display_view, self.edit_view])
 
     def edit_words_clicked(self, _):
         self.edit_stuff.value = self.words
@@ -238,10 +239,15 @@ class WordSpreader(UserControl):
     def add_new_tag(self, e: ControlEvent):
         new_tag_name = e.control.value
         e.control.value = ''
-        self.new_tags_entry.update()
-        self.new_tags_entered.controls.append(Text(new_tag_name))
-        self.new_tags_entered.update()
         self.new_tags_entry.focus()
+        for tag in self.new_tags_entered.controls:
+            if tag.value == new_tag_name:
+                # We already have this tag in the list
+                word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
+                logging.info(f'Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`')
+                return
+        self.new_tags_entered.controls.append(Text(new_tag_name))
+        self.update()
 
     def build(self):
         self.new_title = TextField(
@@ -253,7 +259,7 @@ class WordSpreader(UserControl):
             label="Provide the tags (Optional)",
             expand=True,
             on_submit=self.add_new_tag,
-            tooltip='Press enter to submit a tag',
+            counter_text='Press enter to submit a tag',
         )
         self.new_tags_entered = Row()
         self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
@@ -279,16 +285,16 @@ class WordSpreader(UserControl):
 
         # application's root control (i.e. "view") containing all other controls
         return Column(
-            width=600,
             controls=[
                 Row(
                     [Text(value="Words to Spread", style=flet.TextThemeStyle.HEADLINE_MEDIUM)],
                     alignment=flet.MainAxisAlignment.CENTER,
                 ),
                 Row(controls=[self.new_title]),
-                Row(controls=[self.new_words, self.add_new_words]),
+                Row(controls=[self.new_words]),
                 Row(controls=[self.new_tags_entry]),
                 Row(controls=[self.new_tags_entered]),
+                self.add_new_words,
                 Column(
                     spacing=25,
                     controls=[
@@ -301,16 +307,19 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, _):
         if self.new_title.value:
+            tags = [t.value for t in self.new_tags_entered.controls]
             words = Words(
                 self.new_title.value,
                 self.new_words.value,
+                tags,
                 partial(self.db.update_word, self.new_title.value),
                 self.delete_words,
             )
-            self.db.new_word(self.new_title.value, self.new_words.value)
+            self.db.new_word(self.new_title.value, self.new_words.value, tags)
             self.tasks.controls.append(words)
             self.new_title.value = ""
             self.new_words.value = ""
+            self.new_tags_entered.controls.clear()
             self.new_title.focus()
             self.update()
 
@@ -344,4 +353,5 @@ def main(page: Page):
     page.add(app)
 
 
+logging.basicConfig(level=logging.INFO)
 flet.app(target=main)

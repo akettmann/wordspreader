@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 def db():
     from wordspreader.persistence import DBPersistence
 
-    yield DBPersistence(create_engine("sqlite:///:memory:"))
+    yield DBPersistence(create_engine("sqlite:///:memory:", echo=True))
 
 
 @fixture(scope="session")
@@ -20,7 +20,7 @@ def db_factory():
     def factory() -> "DBPersistence":
         from wordspreader.persistence import DBPersistence
 
-        return DBPersistence(create_engine("sqlite:///:memory:"))
+        return DBPersistence(create_engine("sqlite:///:memory:", echo=True))
 
     return factory
 
