@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Column, Engine, ForeignKey, String, Table, create_engine, delete, select, update
+from sqlalchemy import Column, Engine, ForeignKey, String, Table, create_engine, delete, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
