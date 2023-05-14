@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -19,20 +20,22 @@ class Base(DeclarativeBase):
 association_table = Table(
     "word_to_tag",
     Base.metadata,
-    Column("word_name", ForeignKey("word.name")),
-    Column("tag_name", ForeignKey("tag.name")),
+    Column("word_id", ForeignKey("word.word_id"), primary_key=True),
+    Column("tag_id", ForeignKey("tag.tag_id"), primary_key=True),
 )
 
 
 class Word(Base):
     __tablename__ = "word"
-    name: Mapped[str] = mapped_column(String(100), primary_key=True, unique=True)
+    word_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tags: Mapped[set[Tag]] = relationship(secondary=association_table, lazy='joined')
+    tags: Mapped[set["Tag"]] = relationship(secondary=association_table, lazy='joined')
 
 
 class Tag(Base):
     __tablename__ = "tag"
+    tag_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
 
 
