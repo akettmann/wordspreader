@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 import sqlalchemy.exc
-from hypothesis import strategies as st, given
-from pytest import raises, mark
+from hypothesis import given
+from hypothesis import strategies as st
+from pytest import mark, raises
 
 if TYPE_CHECKING:
     from wordspreader.persistence import DBPersistence, Word
@@ -35,7 +36,7 @@ def test_delete_word(name: str, content: str, db_factory: callable):
         db.get_word(name)
 
 
-@mark.skip(reason='Not using tags yet')
+@mark.skip(reason="Not using tags yet")
 def test_get_words_filtered():
     raise AssertionError()
 
@@ -52,6 +53,16 @@ def test__rename_word(names: list[str, str], content: str, db_factory: callable)
     check_word(new_name, content, db.get_word(new_name))
     with raises(sqlalchemy.exc.NoResultFound):
         check_word(name, content, db.get_word(name))
+
+
+@given(name=st.text(max_size=100), content=st.text(max_size=300))
+def test__rename_word_already_exists(name: str, content: str, db_factory: callable):
+    from wordspreader.persistence import DuplicateKeyException
+
+    db: "DBPersistence" = db_factory()
+    make_get_check(name, content, db)
+    with raises(DuplicateKeyException):
+        db._rename_word(name, name)
 
 
 @given(

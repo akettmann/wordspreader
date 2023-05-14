@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select, Engine
+from sqlalchemy import Column, Engine, ForeignKey, String, Table, create_engine, delete, select, update
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 
@@ -82,6 +82,12 @@ class DBPersistence:
     def get_words_like(self, name: str) -> Iterator[Word]:
         with self._get_session() as session:
             yield from session.execute(select(Word).where(Word.name.like(name))).scalars()
+
+    def add_tag_to_word(self, name: str, tag: str):
+        with self._get_session() as session:
+            word = self._get_word(session, name, for_update=True)
+            word.tags.append(tag)
+            session.commit()
 
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""

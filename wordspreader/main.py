@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, List, Union
 
 import appdirs
 import flet
@@ -24,12 +24,28 @@ from wordspreader.persistence import DBPersistence
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
-class Words(UserControl):
-    def __init__(self, title: str, words: str, edit_me: callable, delete_me: callable):
+class Tag(UserControl):
+    def __init__(self, tag: str, delete_me: callable):
         super().__init__()
+        self._tag = tag
+        self._delete_me = delete_me
 
+    def build(self):
+        self._label = flet.Text(value=self._tag)
+        self._icon_button = IconButton(
+            icon=flet.icons.CANCEL_OUTLINED, on_click=self._delete_me, data={'tag': self._tag}
+        )
+        return Row([self._label, self._icon_button])
+
+
+# noinspection PyAttributeOutsideInit,PyUnusedLocal
+class Words(UserControl):
+    def __init__(self, title: str, words: str, tags: list[str], edit_me: callable, delete_me: callable):
+        super().__init__()
+        self.data = {''}
         self._title = title
         self._words = words
+        self._tags = {}
         self.delete_me = delete_me
         self.edit_me = edit_me
 
@@ -68,6 +84,7 @@ class Words(UserControl):
                     spacing=0,
                     controls=[
                         IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
+                        Row(),
                         IconButton(
                             icon=icons.CREATE_OUTLINED,
                             tooltip="Edit Words",
@@ -218,12 +235,27 @@ class WordSpreader(UserControl):
         db_file.parent.mkdir(parents=True, exist_ok=True)
         return cls(DBPersistence.from_file(db_file))
 
+    def add_new_tag(self, e: ControlEvent):
+        new_tag_name = e.control.value
+        e.control.value = ''
+        self.new_tags_entry.update()
+        self.new_tags_entered.controls.append(Text(new_tag_name))
+        self.new_tags_entered.update()
+        self.new_tags_entry.focus()
+
     def build(self):
         self.new_title = TextField(
             label="Title the words.",
             expand=True,
         )
         self.new_words = TextField(label="Provide the words.", expand=True, multiline=True)
+        self.new_tags_entry = TextField(
+            label="Provide the tags (Optional)",
+            expand=True,
+            on_submit=self.add_new_tag,
+            tooltip='Press enter to submit a tag',
+        )
+        self.new_tags_entered = Row()
         self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
 
         self.tasks = Column(
@@ -231,6 +263,7 @@ class WordSpreader(UserControl):
                 Words(
                     word.name,
                     word.content,
+                    [],
                     partial(self.db.update_word, word.name),
                     self.delete_words,
                 )
@@ -252,12 +285,10 @@ class WordSpreader(UserControl):
                     [Text(value="Words to Spread", style=flet.TextThemeStyle.HEADLINE_MEDIUM)],
                     alignment=flet.MainAxisAlignment.CENTER,
                 ),
-                Row(
-                    controls=[
-                        self.new_title,
-                    ]
-                ),
+                Row(controls=[self.new_title]),
                 Row(controls=[self.new_words, self.add_new_words]),
+                Row(controls=[self.new_tags_entry]),
+                Row(controls=[self.new_tags_entered]),
                 Column(
                     spacing=25,
                     controls=[

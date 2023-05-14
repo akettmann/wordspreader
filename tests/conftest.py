@@ -4,28 +4,28 @@ from pytest import fixture
 from sqlalchemy import create_engine
 
 if TYPE_CHECKING:
-    from wordspreader.persistence import DBPersistence
     from wordspreader.main import WordSpreader
+    from wordspreader.persistence import DBPersistence
 
 
-@fixture(scope='function')
+@fixture(scope="function")
 def db():
     from wordspreader.persistence import DBPersistence
 
-    yield DBPersistence(create_engine('sqlite:///:memory:'))
+    yield DBPersistence(create_engine("sqlite:///:memory:"))
 
 
-@fixture(scope='session')
+@fixture(scope="session")
 def db_factory():
     def factory() -> "DBPersistence":
         from wordspreader.persistence import DBPersistence
 
-        return DBPersistence(create_engine('sqlite:///:memory:'))
+        return DBPersistence(create_engine("sqlite:///:memory:"))
 
     return factory
 
 
-@fixture(scope='session')
+@fixture(scope="session")
 def app_factory(db_factory):
     def factory() -> "WordSpreader":
         from wordspreader.main import WordSpreader
