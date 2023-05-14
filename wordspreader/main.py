@@ -41,12 +41,12 @@ class Tag(UserControl):
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class Words(UserControl):
-    def __init__(self, title: str, words: str, tags: list[str], edit_me: callable, delete_me: callable):
+    def __init__(self, title: str, words: str, tags: set[str], edit_me: callable, delete_me: callable):
         super().__init__()
 
         self._title = title
         self._words = words
-        self._tags = {}
+        self._tags = {t: self._make_tag(t) for t in tags}
         self.delete_me = delete_me
         self.edit_me = edit_me
 
@@ -164,6 +164,13 @@ class Words(UserControl):
     def set_clip(self, _):
         self.page.set_clipboard(self.words)
 
+    def _make_tag(self, t: str) -> Tag:
+        remove_tag = lambda: self.edit_me(self._words, self._tags_without_one(t))
+        return Tag(tag=t, delete_me=remove_tag)
+
+    def _tags_without_one(self, t: str) -> set[str]:
+        return set(filter(lambda x: x != t, self._tags.keys()))
+
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
@@ -234,6 +241,7 @@ class WordSpreader(UserControl):
         dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
         db_file = Path(dirs.user_data_dir) / "wordspreader.sqlite3"
         db_file.parent.mkdir(parents=True, exist_ok=True)
+        logging.info(f'Using file path `{db_file}` for the database')
         return cls(DBPersistence.from_file(db_file))
 
     def add_new_tag(self, e: ControlEvent):
@@ -307,7 +315,7 @@ class WordSpreader(UserControl):
 
     def add_clicked(self, _):
         if self.new_title.value:
-            tags = [t.value for t in self.new_tags_entered.controls]
+            tags = {t.value for t in self.new_tags_entered.controls}
             words = Words(
                 self.new_title.value,
                 self.new_words.value,

@@ -54,7 +54,7 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def update_word(self, name: str, content: str = None, tags: list[Tag] = None, new_name: str = None):
+    def update_word(self, name: str, content: str = None, tags: set[str] = None, new_name: str = None):
         """Update the word with the content, tags, new name, or all three"""
         # This first, less likely to fail
         # specifically tags is not None, because setting the list of tags to `[]` is legal
@@ -105,7 +105,7 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def _update_word(self, name: str, content: str = None, tags: list[Tag] = None):
+    def _update_word(self, name: str, content: str = None, tags: set[str] = None):
         """Doesn't change primary key, just content and/or tags"""
         with self._get_session() as session:
             word = self._get_word(session, name, True)
