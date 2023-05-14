@@ -29,7 +29,19 @@ def make_get_check(name: str, content: str, tags: set[str], db: "DBPersistence")
 
 
 @given(name=st_name, content=st_content, tags=st_tags)
-def test_new_word_and_get_word(name: str, content: str, tags: set[str], db_factory: callable):
+def test_get_word(name: str, content: str, tags: set[str], db_factory: callable):
+    from wordspreader.persistence import Word, Tag
+
+    db: "DBPersistence" = db_factory()
+    with db._get_session() as session:
+        word = Word(name=name, content=content, tags={Tag(name=t) for t in tags})
+        session.add(word)
+        session.commit()
+    check_word(name, content, tags, db.get_word(name))
+
+
+@given(name=st_name, content=st_content, tags=st_tags)
+def test_new_word(name: str, content: str, tags: set[str], db_factory: callable):
     db: "DBPersistence" = db_factory()
     make_get_check(name, content, tags, db)
 
@@ -50,22 +62,17 @@ def test_get_words_filtered():
 
 @given(names=st_name_list, content=st_content, tags=st_tags)
 def test__rename_word(names: list[str, str], content: str, tags: set[str], db_factory: callable):
+    from wordspreader.persistence import DuplicateKeyException
+
     name, new_name = names
     db: "DBPersistence" = db_factory()
     make_get_check(name, content, tags, db)
+    with raises(DuplicateKeyException):
+        # Make sure we still raise a duplicate key if we try and rename to an already used name
+        db._rename_word(name, name)
     db._rename_word(name, new_name)
     check_word(new_name, content, tags, db.get_word(new_name))
     assert db.get_word(name) is None
-
-
-@given(name=st_name, content=st_content, tags=st_tags)
-def test__rename_word_already_exists(name: str, content: str, tags: set[str], db_factory: callable):
-    from wordspreader.persistence import DuplicateKeyException
-
-    db: "DBPersistence" = db_factory()
-    make_get_check(name, content, tags, db)
-    with raises(DuplicateKeyException):
-        db._rename_word(name, name)
 
 
 @given(name=st_name, contents=st_content_list, tags=st_tags)
