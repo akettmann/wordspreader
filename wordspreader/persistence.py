@@ -6,14 +6,16 @@ from pathlib import Path
 
 from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import MappedAsDataclass
 
 
 class DuplicateKeyException(BaseException):
     pass
 
 
-class Base(DeclarativeBase):
+class Base(MappedAsDataclass, DeclarativeBase, eq=True, repr=True):
     pass
 
 
@@ -27,22 +29,17 @@ association_table = Table(
 
 class Word(Base):
     __tablename__ = "word"
-    word_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tags: Mapped[set[Tag]] = relationship(secondary=association_table, lazy="joined")
+    tgs_: Mapped[set[Tag]] = relationship(secondary=association_table, lazy="joined", init=False, repr=False)
+    tags: AssociationProxy[set[str]] = association_proxy("tgs_", "name")
+    word_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False, repr=False)
 
-    def __str__(self):
-        return f'Word(name="{self.name}")'
 
-
-class Tag(Base):
+class Tag(Base, unsafe_hash=True):
     __tablename__ = "tag"
-    tag_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
-
-    def __str__(self):
-        return f'Tag(name="{self.name}")'
+    tag_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False, repr=False)
 
 
 class DBPersistence:
@@ -55,7 +52,7 @@ class DBPersistence:
         return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
     def new_word(self, name: str, content: str, tags: set[str] = None):
-        word = Word(name=name, content=content, tags={Tag(name=t) for t in tags})
+        word = Word(name=name, content=content, tags=tags)
         with self._get_session() as session:
             session.add(word)
             session.commit()
