@@ -4,7 +4,7 @@ import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select, Uuid
+from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
@@ -30,13 +30,19 @@ class Word(Base):
     word_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tags: Mapped[set["Tag"]] = relationship(secondary=association_table, lazy='joined')
+    tags: Mapped[set[Tag]] = relationship(secondary=association_table, lazy="joined")
+
+    def __str__(self):
+        return f'Word(name="{self.name}")'
 
 
 class Tag(Base):
     __tablename__ = "tag"
     tag_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
+
+    def __str__(self):
+        return f'Tag(name="{self.name}")'
 
 
 class DBPersistence:
