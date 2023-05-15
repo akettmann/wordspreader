@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 from hypothesis import given
 from hypothesis import strategies as st
-from pytest import mark, raises
+from pytest import raises
 
-from wordspreader.persistence import Word, Tag
+from wordspreader.persistence import Tag, Word
 
 if TYPE_CHECKING:
     from wordspreader.persistence import DBPersistence
@@ -23,7 +23,7 @@ st_word = st.builds(Word, name=st_name, content=st_content, tags=st_build_tags)
 def check_word(name: str, content: str, tags: set[str], word: "Word"):
     assert word.name == name
     assert word.content == content
-    assert set(t for t in tags) == set(t.name for t in word.tags)
+    assert set(tags) == {t.name for t in word.tags}
 
 
 # noinspection PyProtectedMember
@@ -36,7 +36,7 @@ def make_get_check(name: str, content: str, tags: set[str], db: "DBPersistence")
 
 @given(name=st_name, content=st_content, tags=st_tags)
 def test_get_word(name: str, content: str, tags: set[str], db_factory: callable):
-    from wordspreader.persistence import Word, Tag
+    from wordspreader.persistence import Tag, Word
 
     db: "DBPersistence" = db_factory()
     with db._get_session() as session:
@@ -59,11 +59,6 @@ def test_delete_word(name: str, content: str, tags: set[str], db_factory: callab
     db.delete_word(name)
 
     assert db.get_word(name) is None
-
-
-@mark.skip(reason="Not using tags yet")
-def test_get_words_filtered():
-    raise AssertionError()
 
 
 @given(names=st_name_list, content=st_content, tags=st_tags)
@@ -92,14 +87,12 @@ def test__update_word(name: str, contents: list[str], tags: set[str], db_factory
 
 @given(names=st_name_list, contents=st_content_list, tags=st.sets(st_tag, min_size=2, max_size=2))
 def test__get_words_filtered(names: list[str], contents: list[str], tags: set[str], db_factory):
-    from wordspreader.persistence import Word, Tag
-
     db: "DBPersistence" = db_factory()
 
     name1, name2 = names
     content1, content2 = contents
     tag1, tag2 = tags
-    word1 = make_get_check(name1, content1, {tag1}, db)
+    make_get_check(name1, content1, {tag1}, db)
     # word2 = make_get_check(name2, content2, {tag2}, db)
     word1_list = list(db.get_words_filtered(tag1))
     assert len(word1_list) == 1
