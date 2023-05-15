@@ -74,10 +74,10 @@ class DBPersistence:
     def get_words_filtered(self, category: str = None) -> Iterator[Word]:
         query = select(Word)
         if category is not None:
-            query.where(Word.tags.contains(category))
+            query.where(Word.tags.contains(Tag(name=category)))
 
         with self._get_session() as session:
-            yield from session.scalars(query)
+            yield from session.scalars(query).unique()
 
     def get_word(self, name: str) -> Word:
         with self._get_session() as session:
@@ -85,7 +85,7 @@ class DBPersistence:
 
     def get_words_like(self, name: str) -> Iterator[Word]:
         with self._get_session() as session:
-            yield from session.execute(select(Word).where(Word.name.like(name))).scalars()
+            yield from session.execute(select(Word).where(Word.name.like(name))).unique().scalars()
 
     def add_tag_to_word(self, name: str, tag: str):
         with self._get_session() as session:
