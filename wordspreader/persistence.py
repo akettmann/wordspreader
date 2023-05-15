@@ -7,8 +7,7 @@ from pathlib import Path
 from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
-from sqlalchemy.orm import MappedAsDataclass
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, Session, mapped_column, relationship
 
 
 class DuplicateKeyException(BaseException):
