@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from pytest import fixture
-from sqlalchemy import create_engine, Table
+from sqlalchemy import Table, create_engine
 
 if TYPE_CHECKING:
     from wordspreader.main import WordSpreader
@@ -17,7 +17,7 @@ def db():
 
 @fixture(scope="session")
 def db_factory():
-    from wordspreader.persistence import DBPersistence, Base
+    from wordspreader.persistence import Base, DBPersistence
 
     engine = create_engine("sqlite:///:memory:", echo=True)
 

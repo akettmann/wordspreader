@@ -34,7 +34,7 @@ class Tag(UserControl):
     def build(self):
         self._label = flet.Text(value=self._tag)
         self._icon_button = IconButton(
-            icon=flet.icons.CANCEL_OUTLINED, on_click=self._delete_me, data={'tag': self._tag}
+            icon=flet.icons.CANCEL_OUTLINED, on_click=self._delete_me, data={"tag": self._tag}
         )
         return Row([self._label, self._icon_button])
 
@@ -165,7 +165,9 @@ class Words(UserControl):
         self.page.set_clipboard(self.words)
 
     def _make_tag(self, t: str) -> Tag:
-        remove_tag = lambda: self.edit_me(self._words, self._tags_without_one(t))
+        def remove_tag():
+            return self.edit_me(self._words, self._tags_without_one(t))
+
         return Tag(tag=t, delete_me=remove_tag)
 
     def _tags_without_one(self, t: str) -> set[str]:
@@ -241,18 +243,18 @@ class WordSpreader(UserControl):
         dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
         db_file = Path(dirs.user_data_dir) / "wordspreader.sqlite3"
         db_file.parent.mkdir(parents=True, exist_ok=True)
-        logging.info(f'Using file path `{db_file}` for the database')
+        logging.info(f"Using file path `{db_file}` for the database")
         return cls(DBPersistence.from_file(db_file))
 
     def add_new_tag(self, e: ControlEvent):
         new_tag_name = e.control.value
-        e.control.value = ''
+        e.control.value = ""
         self.new_tags_entry.focus()
         for tag in self.new_tags_entered.controls:
             if tag.value == new_tag_name:
                 # We already have this tag in the list
                 word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
-                logging.info(f'Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`')
+                logging.info(f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`")
                 return
         self.new_tags_entered.controls.append(Text(new_tag_name))
         self.update()
@@ -267,7 +269,7 @@ class WordSpreader(UserControl):
             label="Provide the tags (Optional)",
             expand=True,
             on_submit=self.add_new_tag,
-            counter_text='Press enter to submit a tag',
+            counter_text="Press enter to submit a tag",
         )
         self.new_tags_entered = Row()
         self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
