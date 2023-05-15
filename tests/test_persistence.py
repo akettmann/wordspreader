@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from hypothesis import given
 from hypothesis import strategies as st
-from pytest import mark
 from pytest import raises
 
 from wordspreader.persistence import Tag, Word
