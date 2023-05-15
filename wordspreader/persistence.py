@@ -109,10 +109,10 @@ class DBPersistence:
         """Doesn't change primary key, just content and/or tags"""
         with self._get_session() as session:
             word = self._get_word(session, name, True)
-            if isinstance(content, str):
+            if content is not None:
                 # If it is a str, even empty, we need to assign it, though an empty list evals as falsey
                 word.content = content
-            if isinstance(tags, list):
+            if tags is not None:
                 # If it is a list, even empty, we need to assign it, though an empty list evals as falsey
                 word.tags = tags
             session.add(word)
