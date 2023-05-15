@@ -1,25 +1,27 @@
 from typing import TYPE_CHECKING
 
 from pytest import fixture
-from sqlalchemy import Table, create_engine
+from sqlalchemy import create_engine
 
 if TYPE_CHECKING:
     from wordspreader.main import WordSpreader
     from wordspreader.persistence import DBPersistence
+
+ENGINE_ECHO = True
 
 
 @fixture(scope="function")
 def db():
     from wordspreader.persistence import DBPersistence
 
-    yield DBPersistence(create_engine("sqlite:///:memory:", echo=True))
+    yield DBPersistence(create_engine("sqlite:///:memory:", echo=ENGINE_ECHO))
 
 
 @fixture(scope="session")
 def db_factory():
     from wordspreader.persistence import Base, DBPersistence
 
-    engine = create_engine("sqlite:///:memory:", echo=True)
+    engine = create_engine("sqlite:///:memory:", echo=ENGINE_ECHO)
 
     one_db_lol = DBPersistence(engine)
 
