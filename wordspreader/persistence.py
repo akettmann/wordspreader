@@ -76,7 +76,7 @@ class DBPersistence:
     def get_words_filtered(self, category: str = None) -> Iterator[Word]:
         query = select(Word)
         if category is not None:
-            query.where(Word.tags.contains(category))
+            query = query.where(Word.tags == category)
 
         with self._get_session() as session:
             yield from session.scalars(query).unique()

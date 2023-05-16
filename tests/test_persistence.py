@@ -87,27 +87,30 @@ def test__update_word(name: str, contents: list[str], tags: set[str], db_factory
     check_word(name, new_content, tags, db.get_word(name))
 
 
-@given(
-    names=st_name_list,
-    contents=st_content_list,
-    tags=st.lists(st.sets(st_tag, min_size=4, max_size=5), min_size=2, max_size=2),
-)
-def test__get_words_filtered(names: list[str], contents: list[str], tags: list[set[str]], db_factory):
+@given(names=st_name_list, contents=st_content_list, tags=st.lists(st_tag, min_size=4, max_size=10, unique=True))
+def test__get_words_filtered(names: list[str], contents: list[str], tags: list[str], db_factory):
     db: "DBPersistence" = db_factory()
+
+    def get_by_tag_and_check(my_tag: str, word: Word):
+        word_list = list(db.get_words_filtered(my_tag))
+        assert len(word_list) == 1
+        fetched_word = word_list[0]
+        assert word == fetched_word
 
     # Split up input
     name1, name2 = names
     content1, content2 = contents
-    tag1, tag2 = tags
+    tags1 = set(tags[:4])
+    tags2 = set(tags[4:])
     # Word 1
-    word1 = make_get_check(name1, content1, tag1, db)
-    word1_list = list(db.get_words_filtered(tag1))
-    assert len(word1_list) == 1
-    word1_by_tag = word1_list[0]
-    assert word1 == word1_by_tag
+    word1 = make_get_check(name1, content1, tags1, db)
+    for tag in word1.tags:
+        assert tag in tags1
+        assert tag not in tags2
+        get_by_tag_and_check(tag, word1)
     # Word 2
-    word2 = make_get_check(name2, content2, tag2, db)
-    word2_list = list(db.get_words_filtered(tag2))
-    assert len(word2_list) == 1
-    word2_by_tag = word2_list[0]
-    assert word2 == word2_by_tag
+    word2 = make_get_check(name2, content2, tags2, db)
+    for tag in word2.tags:
+        assert tag in tags2
+        assert tag not in tags1
+        get_by_tag_and_check(tag, word2)
