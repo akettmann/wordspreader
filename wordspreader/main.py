@@ -75,7 +75,7 @@ class Words(UserControl):
         self.display_words = Text(self.title)
         # This is used for either title or content
         self.edit_stuff = TextField(expand=1)
-
+        self._tag_row = Row(controls=[t for t in self._tags.values()])
         self.display_view = Row(
             alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=flet.CrossAxisAlignment.CENTER,
@@ -84,8 +84,8 @@ class Words(UserControl):
                 Row(
                     spacing=0,
                     controls=[
+                        self._tag_row,
                         IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
-                        Row(),
                         IconButton(
                             icon=icons.CREATE_OUTLINED,
                             tooltip="Edit Words",
@@ -165,8 +165,10 @@ class Words(UserControl):
         self.page.set_clipboard(self.words)
 
     def _make_tag(self, t: str) -> Tag:
-        def remove_tag():
-            return self.edit_me(self._words, self._tags_without_one(t))
+        def remove_tag(_):
+            self.edit_me(self._words, self._tags_without_one(t))
+            self._tag_row.controls.remove(self._tags.pop(t))
+            self.update()
 
         return Tag(tag=t, delete_me=remove_tag)
 
@@ -279,7 +281,7 @@ class WordSpreader(UserControl):
                 Words(
                     word.name,
                     word.content,
-                    [],
+                    word.tags,
                     partial(self.db.update_word, word.name),
                     self.delete_words,
                 )
