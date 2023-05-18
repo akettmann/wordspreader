@@ -7,21 +7,18 @@ import appdirs
 import flet
 from flet import (
     Column,
-    IconButton,
     Page,
     Row,
     Tab,
     Tabs,
     Text,
-    TextField,
     UserControl,
-    icons,
 )
 from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
-from wordspreader.components import Words
-from wordspreader.persistence import DBPersistence
+from wordspreader.components import Words, WordEntry
+from wordspreader.persistence import DBPersistence, Word
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
@@ -96,51 +93,14 @@ class WordSpreader(UserControl):
         logging.info(f"Using file path `{db_file}` for the database")
         return cls(DBPersistence.from_file(db_file))
 
-    def add_new_tag(self, e: ControlEvent):
-        new_tag_name = e.control.value
-        e.control.value = ""
-        self.new_tags_entry.focus()
-        for tag in self.new_tags_entered.controls:
-            if tag.value == new_tag_name:
-                # We already have this tag in the list
-                word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
-                logging.info(f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`")
-                return
-        self.new_tags_entered.controls.append(Text(new_tag_name))
-        self.update()
-
     def build(self):
-        self.new_title = TextField(
-            label="Title the words.",
-            expand=True,
-        )
-        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True)
-        self.new_tags_entry = TextField(
-            label="Provide the tags (Optional)",
-            expand=True,
-            on_submit=self.add_new_tag,
-            counter_text="Press enter to submit a tag",
-        )
-        self.new_tags_entered = Row()
-        self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked)
+        self.word_entry = WordEntry(self.new_word)
 
-        self.tasks = Column(
-            controls=[
-                Words(
-                    word.name,
-                    word.content,
-                    word.tags,
-                    partial(self.db.update_word, word.name),
-                    self.delete_words,
-                )
-                for word in self.db.get_words_filtered()
-            ]
-        )
-
-        self.category = Tabs(
+        self.tasks = Column(controls=self._build_all_words())
+        self.keywords = Tabs(
             selected_index=0,
-            on_change=self.tabs_changed,
-            tabs=[Tab(text="all")],
+            on_change=self.filter_changed,
+            tabs=self._build_keywords(),
         )
 
         # application's root control (i.e. "view") containing all other controls
@@ -150,57 +110,68 @@ class WordSpreader(UserControl):
                     [Text(value="Words to Spread", style=flet.TextThemeStyle.HEADLINE_MEDIUM)],
                     alignment=flet.MainAxisAlignment.CENTER,
                 ),
-                Row(controls=[self.new_title]),
-                Row(controls=[self.new_words]),
-                Row(controls=[self.new_tags_entry]),
-                Row(controls=[self.new_tags_entered]),
-                self.add_new_words,
                 Column(
                     spacing=25,
                     controls=[
-                        self.category,
+                        self.word_entry,
+                        self.keywords,
                         self.tasks,
                     ],
                 ),
             ],
         )
 
-    def add_clicked(self, _):
-        if self.new_title.value:
-            tags = {t.value for t in self.new_tags_entered.controls}
-            words = Words(
-                self.new_title.value,
-                self.new_words.value,
-                tags,
-                partial(self.db.update_word, self.new_title.value),
+    def _build_all_words(self) -> list[Words]:
+        return [
+            Words(
+                word.name,
+                word.content,
+                word.tags,
+                partial(self.db.update_word, word.name),
                 self.delete_words,
             )
-            self.db.new_word(self.new_title.value, self.new_words.value, tags)
-            self.tasks.controls.append(words)
-            self.new_title.value = ""
-            self.new_words.value = ""
-            self.new_tags_entered.controls.clear()
-            self.new_title.focus()
-            self.update()
+            for word in self.db.get_words_filtered()
+        ]
+
+    def _build_keywords(self, current_tags: list[Tab] = None) -> list[Tab]:
+        tab_names = set(self.db.get_all_tags())
+        # This will be empty if the current_tags is not provided, so we make all of them
+        already_made = set(t.text for t in current_tags or list())
+        tabs = [Tab(text="all")]
+        tabs.extend([Tab(text=t) for t in self.db.get_all_tags()])
+        return tabs
 
     def delete_words(self, words: Words):
         self.db.delete_word(words.title)
         self.tasks.controls.remove(words)
         self.update()
 
-    def tabs_changed(self, _):
+    def filter_changed(self, _: ControlEvent):
+        status = self.keywords.tabs[self.keywords.selected_index].text
+        if status == 'all':
+            for task in self.tasks.controls:
+                task.visible = True
+        else:
+            for task in self.tasks.controls:
+                task.visible = status in task.tags
         self.update()
 
     def update(self):
-        status = self.category.tabs[self.category.selected_index].text
-        for task in self.tasks.controls:
-            task.visible = (
-                status == "all"
-                or (status == "active" and task.completed is False)
-                or (status == "completed" and task.completed)
-            )
-
         super().update()
+
+    def db_word_to_flet_word(self, db_word: Word) -> Words:
+        return Words(
+            db_word.name,
+            db_word.content,
+            db_word.tags,
+            partial(self.db.update_word, db_word.name),
+            partial(self.db.delete_word, db_word.name),
+        )
+
+    def new_word(self, title: str, words: str, tags: set[str] = None) -> Words:
+        db_word = self.db.new_word(title, words, tags)
+        self.update()
+        return self.db_word_to_flet_word(db_word)
 
 
 def main(page: Page):
@@ -213,5 +184,5 @@ def main(page: Page):
     page.add(app)
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 flet.app(target=main)

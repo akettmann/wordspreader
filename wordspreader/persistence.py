@@ -50,11 +50,13 @@ class DBPersistence:
     def from_file(cls, db_file: Path):
         return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
-    def new_word(self, name: str, content: str, tags: set[str] = None):
+    def new_word(self, name: str, content: str, tags: set[str] = None) -> Word:
         word = Word(name=name, content=content, tags=tags)
         with self._get_session() as session:
             session.add(word)
             session.commit()
+            word = session.scalar(select(Word).where(Word.name == name))
+        return word
 
     def update_word(self, name: str, content: str = None, tags: set[str] = None, new_name: str = None):
         """Update the word with the content, tags, new name, or all three"""
@@ -94,6 +96,10 @@ class DBPersistence:
             word = self._get_word(session, name, for_update=True)
             word.tags.append(Tag(name=tag))
             session.commit()
+
+    def get_all_tags(self) -> Iterator[str]:
+        with self._get_session() as session:
+            yield from session.execute(select(Tag.name)).scalars()
 
     def _rename_word(self, old_name: str, new_name: str):
         """Changes the primary key"""

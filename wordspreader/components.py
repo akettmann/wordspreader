@@ -1,5 +1,24 @@
+import logging
+from typing import Optional, List, Union, Any
+
 import flet
-from flet_core import UserControl, IconButton, Row, Text, TextField, icons, colors, Stack, ControlEvent
+from flet_core import (
+    UserControl,
+    IconButton,
+    Row,
+    Text,
+    TextField,
+    icons,
+    colors,
+    Stack,
+    ControlEvent,
+    Control,
+    Ref,
+    OptionalNumber,
+    ClipBehavior,
+    ResponsiveRow,
+)
+from flet_core.types import ResponsiveNumber, RotateValue, ScaleValue, OffsetValue, AnimationValue
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
@@ -48,6 +67,10 @@ class Words(UserControl):
 
         self.display_words.value = value
         self.display_words.update()
+
+    @property
+    def tags(self) -> set[str]:
+        return set(self._tags.keys())
 
     def build(self):
         self.display_words = Text(self.title)
@@ -152,3 +175,118 @@ class Words(UserControl):
 
     def _tags_without_one(self, t: str) -> set[str]:
         return set(filter(lambda x: x != t, self._tags.keys()))
+
+
+class WordEntry(UserControl):
+    def __init__(
+        self,
+        new_word: callable,
+        controls: Optional[List[Control]] = None,
+        ref: Optional[Ref] = None,
+        width: OptionalNumber = None,
+        height: OptionalNumber = None,
+        left: OptionalNumber = None,
+        top: OptionalNumber = None,
+        right: OptionalNumber = None,
+        bottom: OptionalNumber = None,
+        expand: Union[None, bool, int] = None,
+        col: Optional[ResponsiveNumber] = None,
+        opacity: OptionalNumber = None,
+        rotate: RotateValue = None,
+        scale: ScaleValue = None,
+        offset: OffsetValue = None,
+        aspect_ratio: OptionalNumber = None,
+        animate_opacity: AnimationValue = None,
+        animate_size: AnimationValue = None,
+        animate_position: AnimationValue = None,
+        animate_rotation: AnimationValue = None,
+        animate_scale: AnimationValue = None,
+        animate_offset: AnimationValue = None,
+        on_animation_end=None,
+        visible: Optional[bool] = None,
+        disabled: Optional[bool] = None,
+        data: Any = None,
+        clip_behavior: Optional[ClipBehavior] = None,
+    ):
+        super().__init__(
+            controls,
+            ref,
+            width,
+            height,
+            left,
+            top,
+            right,
+            bottom,
+            expand,
+            col,
+            opacity,
+            rotate,
+            scale,
+            offset,
+            aspect_ratio,
+            animate_opacity,
+            animate_size,
+            animate_position,
+            animate_rotation,
+            animate_scale,
+            animate_offset,
+            on_animation_end,
+            visible,
+            disabled,
+            data,
+            clip_behavior,
+        )
+        self.new_word = new_word
+        self.new_title = TextField(
+            label="Title the words.",
+            expand=True,
+        )
+        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True)
+        self.new_tags_entry = TextField(
+            label="Provide the tags (Optional)",
+            expand=True,
+            on_submit=self.add_new_tag,
+            counter_text="Press enter to submit a tag",
+        )
+        self.new_tags_entered = Row()
+        self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked, icon_color=colors.GREEN)
+
+    def build(self):
+        return ResponsiveRow(
+            controls=[
+                self.new_title,
+                self.new_words,
+                self.new_tags_entry,
+                self.new_tags_entered,
+                self.add_new_words,
+            ],
+            expand=True,
+        )
+
+    def add_new_tag(self, e: ControlEvent):
+        new_tag_name = e.control.value
+        e.control.value = ""
+        self.new_tags_entry.focus()
+        for tag in self.new_tags_entered.controls:
+            if tag.value == new_tag_name:
+                # We already have this tag in the list
+                word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
+                logging.info(f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`")
+                return
+        self.new_tags_entered.controls.append(Text(new_tag_name))
+        self.new_tags_entered.update()
+        self.new_tags_entry.update()
+
+    def reset(self):
+        self.new_title.value = ""
+        self.new_words.value = ""
+        self.new_tags_entered.controls.clear()
+        self.new_title.focus()
+        self.update()
+
+    def add_clicked(self, _: ControlEvent):
+        if self.new_title.value:
+            tags = {t.value for t in self.new_tags_entered.controls}
+
+            self.new_word(self.new_title.value, self.new_words.value, tags)
+            self.reset()
