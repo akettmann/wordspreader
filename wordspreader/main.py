@@ -17,7 +17,7 @@ from flet import (
 from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
-from wordspreader.components import Words, WordEntry
+from wordspreader.components import WordEntry, Words
 from wordspreader.persistence import DBPersistence, Word
 
 
@@ -134,9 +134,9 @@ class WordSpreader(UserControl):
         ]
 
     def _build_keywords(self, current_tags: list[Tab] = None) -> list[Tab]:
-        tab_names = set(self.db.get_all_tags())
+        set(self.db.get_all_tags())
         # This will be empty if the current_tags is not provided, so we make all of them
-        already_made = set(t.text for t in current_tags or list())
+        {t.text for t in current_tags or []}
         tabs = [Tab(text="all")]
         tabs.extend([Tab(text=t) for t in self.db.get_all_tags()])
         return tabs
@@ -148,7 +148,7 @@ class WordSpreader(UserControl):
 
     def filter_changed(self, _: ControlEvent):
         status = self.keywords.tabs[self.keywords.selected_index].text
-        if status == 'all':
+        if status == "all":
             for task in self.tasks.controls:
                 task.visible = True
         else:

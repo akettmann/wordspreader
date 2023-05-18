@@ -4,7 +4,6 @@ from hypothesis import given
 from hypothesis import strategies as st
 from pytest import fixture, skip
 
-
 if TYPE_CHECKING:
     from wordspreader.main import WordSpreader
     from wordspreader.persistence import Word

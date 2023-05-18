@@ -1,24 +1,24 @@
 import logging
-from typing import Optional, List, Union, Any
+from typing import Any
 
 import flet
 from flet_core import (
-    UserControl,
+    ClipBehavior,
+    Control,
+    ControlEvent,
     IconButton,
+    OptionalNumber,
+    Ref,
+    ResponsiveRow,
     Row,
+    Stack,
     Text,
     TextField,
-    icons,
+    UserControl,
     colors,
-    Stack,
-    ControlEvent,
-    Control,
-    Ref,
-    OptionalNumber,
-    ClipBehavior,
-    ResponsiveRow,
+    icons,
 )
-from flet_core.types import ResponsiveNumber, RotateValue, ScaleValue, OffsetValue, AnimationValue
+from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
@@ -76,7 +76,7 @@ class Words(UserControl):
         self.display_words = Text(self.title)
         # This is used for either title or content
         self.edit_stuff = TextField(expand=1)
-        self._tag_row = Row(controls=[t for t in self._tags.values()])
+        self._tag_row = Row(controls=list(self._tags.values()))
         self.display_view = Row(
             alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=flet.CrossAxisAlignment.CENTER,
@@ -181,16 +181,16 @@ class WordEntry(UserControl):
     def __init__(
         self,
         new_word: callable,
-        controls: Optional[List[Control]] = None,
-        ref: Optional[Ref] = None,
+        controls: list[Control] | None = None,
+        ref: Ref | None = None,
         width: OptionalNumber = None,
         height: OptionalNumber = None,
         left: OptionalNumber = None,
         top: OptionalNumber = None,
         right: OptionalNumber = None,
         bottom: OptionalNumber = None,
-        expand: Union[None, bool, int] = None,
-        col: Optional[ResponsiveNumber] = None,
+        expand: None | bool | int = None,
+        col: ResponsiveNumber | None = None,
         opacity: OptionalNumber = None,
         rotate: RotateValue = None,
         scale: ScaleValue = None,
@@ -203,10 +203,10 @@ class WordEntry(UserControl):
         animate_scale: AnimationValue = None,
         animate_offset: AnimationValue = None,
         on_animation_end=None,
-        visible: Optional[bool] = None,
-        disabled: Optional[bool] = None,
+        visible: bool | None = None,
+        disabled: bool | None = None,
         data: Any = None,
-        clip_behavior: Optional[ClipBehavior] = None,
+        clip_behavior: ClipBehavior | None = None,
     ):
         super().__init__(
             controls,
