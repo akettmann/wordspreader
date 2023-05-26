@@ -74,9 +74,12 @@ style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
 ]
-fmt = [
+silent = [
   "black {args:.}",
   "ruff --fix {args:.}",
+]
+fmt = [
+  "silent",
   "style",
 ]
 all = [

@@ -7,7 +7,10 @@ from flet_core import (
     Control,
     ControlEvent,
     IconButton,
+    ListTile,
     OptionalNumber,
+    PopupMenuButton,
+    PopupMenuItem,
     Ref,
     ResponsiveRow,
     Row,
@@ -64,9 +67,12 @@ class Words(UserControl):
     def title(self, value):
         self.edit_me(new_name=value)
         self._title = value
-
+        # Old
         self.display_words.value = value
         self.display_words.update()
+        # New
+        self.display_view2.title = value
+        self.display_view2.update()
 
     @property
     def tags(self) -> set[str]:
@@ -106,6 +112,28 @@ class Words(UserControl):
                 ),
             ],
         )
+        self.title_widget = Text(self._title)
+        self.tags_widgets = [
+            IconButton(
+                icon=icons.DELETE,
+            )
+        ]
+        self.display_view2 = ListTile(
+            leading=IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
+            title=Row(
+                [
+                    self.title_widget,
+                ]
+            ),
+            trailing=PopupMenuButton(
+                icon=icons.MORE_VERT,
+                items=[
+                    PopupMenuItem(text="Edit Words", on_click=self.edit_words_clicked),
+                    PopupMenuItem(text="Edit Title", on_click=self.edit_title_clicked),
+                    PopupMenuItem(text="Delete Words", on_click=self.delete_clicked),
+                ],
+            ),
+        )
 
         self.edit_view = Row(
             visible=False,
@@ -125,7 +153,7 @@ class Words(UserControl):
                 ),
             ],
         )
-        return Stack(controls=[self.display_view, self.edit_view])
+        return Stack(controls=[self.display_view2, self.edit_view])
 
     def edit_words_clicked(self, _):
         self.edit_stuff.value = self.words
