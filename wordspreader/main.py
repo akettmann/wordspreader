@@ -17,7 +17,8 @@ from flet import (
 from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
-from wordspreader.components import WordEntry, Words
+from wordspreader.components import Words
+from wordspreader.components.wordentry import WordEntry
 from wordspreader.persistence import DBPersistence, Word
 
 
@@ -184,5 +185,5 @@ def main(page: Page):
     page.add(app)
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 flet.app(target=main)
