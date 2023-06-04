@@ -1,13 +1,16 @@
 import flet
 from flet_core import (
+    Column,
     ControlEvent,
     IconButton,
     ListTile,
+    OutlinedButton,
     PopupMenuButton,
     PopupMenuItem,
     Row,
     Stack,
     Text,
+    TextButton,
     TextField,
     UserControl,
     colors,
@@ -58,64 +61,26 @@ class Words(UserControl):
     def title(self, value):
         self.edit_me(new_name=value)
         self._title = value
-        # Old
-        self.display_words.value = value
-        self.display_words.update()
         # New
-        self.display_view2.title = value
-        self.display_view2.update()
+        self.title_widget.value = value
+        self.title_widget.update()
 
     @property
-    def tags(self) -> set[str]:
-        return set(self._tags.keys())
+    def tags(self) -> list[str]:
+        return sorted(self._tags.keys())
+
+    def build_tag_widgets(self):
+        return [OutlinedButton(t, disabled=True) for t in self._tags]
 
     def build(self):
-        self.display_words = Text(self.title)
         # This is used for either title or content
-        self.edit_stuff = TextField(expand=1)
+        self.edit_stuff = TextField(label="", expand=True, multiline=True)
         self._tag_row = Row(controls=list(self._tags.values()))
-        self.display_view = Row(
-            alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=flet.CrossAxisAlignment.CENTER,
-            controls=[
-                self.display_words,
-                Row(
-                    spacing=0,
-                    controls=[
-                        self._tag_row,
-                        IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
-                        IconButton(
-                            icon=icons.CREATE_OUTLINED,
-                            tooltip="Edit Words",
-                            on_click=self.edit_words_clicked,
-                        ),
-                        IconButton(
-                            icon=icons.TITLE,
-                            tooltip="Edit Title",
-                            on_click=self.edit_title_clicked,
-                        ),
-                        IconButton(
-                            icons.DELETE_OUTLINE,
-                            tooltip="Delete Words",
-                            on_click=self.delete_clicked,
-                        ),
-                    ],
-                ),
-            ],
-        )
         self.title_widget = Text(self._title)
-        self.tags_widgets = [
-            IconButton(
-                icon=icons.DELETE,
-            )
-        ]
-        self.display_view2 = ListTile(
+        self.tags_widgets = self.build_tag_widgets()
+        self.display_view = ListTile(
             leading=IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
-            title=Row(
-                [
-                    self.title_widget,
-                ]
-            ),
+            title=Row([self.title_widget, *self.tags_widgets]),
             trailing=PopupMenuButton(
                 icon=icons.MORE_VERT,
                 items=[
@@ -144,11 +109,10 @@ class Words(UserControl):
                 ),
             ],
         )
-        return Stack(controls=[self.display_view2, self.edit_view])
+        return Column(controls=[self.display_view, self.edit_view])
 
     def edit_words_clicked(self, _):
         self.edit_stuff.value = self.words
-        self.display_view.visible = False
         self.edit_view.visible = True
         self.edit_stuff.tooltip = "Update words"
         self.editing = "words"
@@ -156,7 +120,6 @@ class Words(UserControl):
 
     def edit_title_clicked(self, _):
         self.edit_stuff.value = self.title
-        self.display_view.visible = False
         self.edit_view.visible = True
         self.edit_stuff.tooltip = "Update title"
         self.editing = "title"

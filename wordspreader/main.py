@@ -10,14 +10,14 @@ from flet import (
     Page,
     Row,
     Tab,
-    Tabs,
     Text,
     UserControl,
 )
-from flet_core import ClipBehavior, Control, ControlEvent, OptionalNumber, Ref
+from flet_core import ClipBehavior, Control, OptionalNumber, Ref
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 from wordspreader.components import Words
+from wordspreader.components.worddisplay import WordDisplay
 from wordspreader.components.wordentry import WordEntry
 from wordspreader.persistence import DBPersistence, Word
 
@@ -84,6 +84,8 @@ class WordSpreader(UserControl):
         )
 
         self.db = db
+        self.word_entry = WordEntry(self.new_word)
+        self.word_display = WordDisplay(self.db)
 
     @classmethod
     def default_app_dir_db(cls):
@@ -95,15 +97,6 @@ class WordSpreader(UserControl):
         return cls(DBPersistence.from_file(db_file))
 
     def build(self):
-        self.word_entry = WordEntry(self.new_word)
-
-        self.tasks = Column(controls=self._build_all_words())
-        self.keywords = Tabs(
-            selected_index=0,
-            on_change=self.filter_changed,
-            tabs=self._build_keywords(),
-        )
-
         # application's root control (i.e. "view") containing all other controls
         return Column(
             controls=[
@@ -113,11 +106,7 @@ class WordSpreader(UserControl):
                 ),
                 Column(
                     spacing=25,
-                    controls=[
-                        self.word_entry,
-                        self.keywords,
-                        self.tasks,
-                    ],
+                    controls=[self.word_entry, self.word_display],
                 ),
             ],
         )
@@ -129,7 +118,7 @@ class WordSpreader(UserControl):
                 word.content,
                 word.tags,
                 partial(self.db.update_word, word.name),
-                self.delete_words,
+                self.word_display.delete_words,
             )
             for word in self.db.get_words_filtered()
         ]
@@ -141,21 +130,6 @@ class WordSpreader(UserControl):
         tabs = [Tab(text="all")]
         tabs.extend([Tab(text=t) for t in self.db.get_all_tags()])
         return tabs
-
-    def delete_words(self, words: Words):
-        self.db.delete_word(words.title)
-        self.tasks.controls.remove(words)
-        self.update()
-
-    def filter_changed(self, _: ControlEvent):
-        status = self.keywords.tabs[self.keywords.selected_index].text
-        if status == "all":
-            for task in self.tasks.controls:
-                task.visible = True
-        else:
-            for task in self.tasks.controls:
-                task.visible = status in task.tags
-        self.update()
 
     def update(self):
         super().update()
@@ -185,5 +159,15 @@ def main(page: Page):
     page.add(app)
 
 
-logging.basicConfig(level=logging.INFO)
-flet.app(target=main)
+def test_main(page: Page):
+    page.title = "Word Spreader"
+    page.horizontal_alignment = "center"
+    page.scroll = "adaptive"
+    # create application instance
+    app = WordSpreader.default_app_dir_db()
+    page.add(app.word_display)
+
+
+# logging.basicConfig(level=logging.INFO)
+flet.app(target=test_main)
+# flet.app(target=main)
