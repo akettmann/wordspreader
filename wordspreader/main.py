@@ -9,7 +9,6 @@ from flet import (
     Column,
     Page,
     Row,
-    Tab,
     Text,
     UserControl,
 )
@@ -111,18 +110,6 @@ class WordSpreader(UserControl):
             ],
         )
 
-    def _build_all_words(self) -> list[Words]:
-        return [
-            Words(
-                word.name,
-                word.content,
-                word.tags,
-                partial(self.db.update_word, word.name),
-                self.word_display.delete_words,
-            )
-            for word in self.db.get_words_filtered()
-        ]
-
     def update(self):
         self.word_display.update()
         self.word_entry.update()
@@ -163,5 +150,5 @@ def test_main(page: Page):
 
 
 # logging.basicConfig(level=logging.INFO)
-flet.app(target=test_main)
-# flet.app(target=main)
+# flet.app(target=test_main)
+flet.app(target=main)
