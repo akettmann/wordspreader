@@ -64,7 +64,7 @@ class Words(UserControl):
         self.popup_menu = PopupMenuButton(
             items=[
                 PopupMenuItem(text="Edit", on_click=self.edit_me),
-                PopupMenuItem(text="Delete", on_click=self.delete_me),
+                PopupMenuItem(text="Delete", on_click=self.delete_clicked),
             ],
         )
         self.list_tile = ListTile(
