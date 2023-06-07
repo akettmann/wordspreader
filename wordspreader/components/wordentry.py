@@ -91,7 +91,9 @@ class WordEntry(UserControl):
             counter_text="Press enter to submit a tag",
         )
         self.new_tags_entered = Row()
-        self.add_new_words = IconButton(icons.ADD, on_click=self.add_clicked, icon_color=colors.GREEN)
+        self.add_new_words = IconButton(
+            icons.ADD, on_click=self.add_clicked, icon_color=colors.GREEN
+        )
 
     def build(self):
         return ResponsiveRow(
@@ -113,7 +115,9 @@ class WordEntry(UserControl):
             if tag.value == new_tag_name:
                 # We already have this tag in the list
                 word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
-                logging.info(f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`")
+                logging.info(
+                    f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`"
+                )
                 return
         self.new_tags_entered.controls.append(Text(new_tag_name))
         self.new_tags_entered.update()

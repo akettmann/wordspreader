@@ -43,7 +43,8 @@ dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
   "watchdog",
-  "hypothesis"
+  "hypothesis",
+  "pyyaml"
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
@@ -89,12 +90,12 @@ all = [
 
 [tool.black]
 target-version = ["py311"]
-line-length = 120
+line-length = 100
 skip-string-normalization = true
 
 [tool.ruff]
 target-version = "py311"
-line-length = 120
+line-length = 100
 select = [
   "A",
   "ARG",

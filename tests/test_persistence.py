@@ -87,7 +87,11 @@ def test__update_word(name: str, contents: list[str], tags: set[str], db_factory
     check_word(name, new_content, tags, db.get_word(name))
 
 
-@given(names=st_name_list, contents=st_content_list, tags=st.lists(st_tag, min_size=4, max_size=10, unique=True))
+@given(
+    names=st_name_list,
+    contents=st_content_list,
+    tags=st.lists(st_tag, min_size=4, max_size=10, unique=True),
+)
 def test__get_words_filtered(names: list[str], contents: list[str], tags: list[str], db_factory):
     db: "DBPersistence" = db_factory()
 

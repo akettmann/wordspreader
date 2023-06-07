@@ -1,48 +1,43 @@
 import flet
 from flet_core import (
+    ButtonStyle,
     Column,
+    Container,
     ControlEvent,
+    FontWeight,
     IconButton,
     ListTile,
-    OutlinedButton,
+    MainAxisAlignment,
+    MaterialState,
+    OutlinedBorder,
     PopupMenuButton,
     PopupMenuItem,
+    ResponsiveRow,
+    RoundedRectangleBorder,
     Row,
     Stack,
     Text,
-    TextButton,
     TextField,
+    TextThemeStyle,
     UserControl,
+    border,
     colors,
     icons,
 )
 
 
-# noinspection PyAttributeOutsideInit,PyUnusedLocal
-class Tag(UserControl):
-    def __init__(self, tag: str, delete_me: callable):
-        super().__init__()
-        self._tag = tag
-        self._delete_me = delete_me
-
-    def build(self):
-        self._label = flet.Text(value=self._tag)
-        self._icon_button = IconButton(
-            icon=flet.icons.CANCEL_OUTLINED, on_click=self._delete_me, data={"tag": self._tag}
-        )
-        return Row([self._label, self._icon_button])
-
-
-# noinspection PyAttributeOutsideInit,PyUnusedLocal
 class Words(UserControl):
-    def __init__(self, title: str, words: str, tags: set[str], edit_me: callable, delete_me: callable):
+    def __init__(
+        self, title: str, words: str, tags: set[str], edit_me: callable, delete_me: callable
+    ):
         super().__init__()
 
         self._title = title
         self._words = words
-        self._tags = {t: self._make_tag(t) for t in tags}
+        self._tags = sorted(tags)
         self.delete_me = delete_me
         self.edit_me = edit_me
+        self.editing: str | None = None
 
     @property
     def words(self):
@@ -59,101 +54,57 @@ class Words(UserControl):
 
     @title.setter
     def title(self, value):
+        # Updates the database
         self.edit_me(new_name=value)
+        # Updates my local value
         self._title = value
-        # New
-        self.title_widget.value = value
+        # Updates the widget
+        self.title_text.value = value
+        # Updates the UI
         self.title_widget.update()
 
     @property
     def tags(self) -> list[str]:
-        return sorted(self._tags.keys())
+        return sorted(self._tags)
 
-    def build_tag_widgets(self):
-        return [OutlinedButton(t, disabled=True) for t in self._tags]
-
+    # noinspection PyAttributeOutsideInit
     def build(self):
-        # This is used for either title or content
-        self.edit_stuff = TextField(label="", expand=True, multiline=True)
-        self._tag_row = Row(controls=list(self._tags.values()))
-        self.title_widget = Text(self._title)
-        self.tags_widgets = self.build_tag_widgets()
-        self.display_view = ListTile(
-            leading=IconButton(icon=icons.COPY, tooltip="Copy Words", on_click=self.set_clip),
-            title=Row([self.title_widget, *self.tags_widgets]),
-            trailing=PopupMenuButton(
-                icon=icons.MORE_VERT,
-                items=[
-                    PopupMenuItem(text="Edit Words", on_click=self.edit_words_clicked),
-                    PopupMenuItem(text="Edit Title", on_click=self.edit_title_clicked),
-                    PopupMenuItem(text="Delete Words", on_click=self.delete_clicked),
-                ],
+        self.copy_icon = IconButton(
+            icon=icons.COPY_SHARP,
+            icon_size=35,
+            on_click=self.set_clip,
+            tooltip="Copy the text.",
+            style=ButtonStyle(
+                color={
+                    MaterialState.PRESSED: colors.RED,
+                    MaterialState.DEFAULT: colors.WHITE,
+                }
             ),
         )
-
-        self.edit_view = Row(
-            visible=False,
-            alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=flet.CrossAxisAlignment.CENTER,
-            controls=[
-                self.edit_stuff,
-                IconButton(
-                    icon=icons.CANCEL_OUTLINED,
-                    icon_color=colors.RED,
-                    on_click=self.cancel_clicked,
-                ),
-                IconButton(
-                    icon=icons.DONE_OUTLINE_OUTLINED,
-                    icon_color=colors.GREEN,
-                    on_click=self.save_clicked,
-                ),
+        self.words_text = Text(value=self._words, max_lines=1)
+        self.title_text = Text(value=self._title)
+        self.tag_text = Text(
+            value=", ".join(self.tags),
+            style=TextThemeStyle.BODY_MEDIUM,
+            italic=True,
+            weight=FontWeight.BOLD,
+        )
+        self.popup_menu = PopupMenuButton(
+            items=[
+                PopupMenuItem(text="Edit", on_click=self.edit_me),
+                PopupMenuItem(text="Delete", on_click=self.delete_me),
             ],
         )
-        return Column(controls=[self.display_view, self.edit_view])
-
-    def edit_words_clicked(self, _):
-        self.edit_stuff.value = self.words
-        self.edit_view.visible = True
-        self.edit_stuff.tooltip = "Update words"
-        self.editing = "words"
-        self.update()
-
-    def edit_title_clicked(self, _):
-        self.edit_stuff.value = self.title
-        self.edit_view.visible = True
-        self.edit_stuff.tooltip = "Update title"
-        self.editing = "title"
-        self.update()
-
-    def save_clicked(self, _):
-        new = self.edit_stuff.value
-        if self.editing == "title":
-            self.title = new
-        elif self.editing == "words":
-            self.words = new
-        else:
-            raise RuntimeError()
-        self.cancel_clicked()
+        self.list_tile = ListTile(
+            leading=self.copy_icon,
+            title=Row([self.title_text, self.tag_text]),
+            subtitle=self.words_text,
+            trailing=self.popup_menu,
+        )
+        return self.list_tile
 
     def delete_clicked(self, _):
         self.delete_me(self)
 
-    def cancel_clicked(self, _: ControlEvent = None):
-        self.display_view.visible = True
-        self.edit_view.visible = False
-        self.editing = None
-        self.update()
-
     def set_clip(self, _):
         self.page.set_clipboard(self.words)
-
-    def _make_tag(self, t: str) -> Tag:
-        def remove_tag(_):
-            self.edit_me(self._words, self._tags_without_one(t))
-            self._tag_row.controls.remove(self._tags.pop(t))
-            self.update()
-
-        return Tag(tag=t, delete_me=remove_tag)
-
-    def _tags_without_one(self, t: str) -> set[str]:
-        return set(filter(lambda x: x != t, self._tags.keys()))

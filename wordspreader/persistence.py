@@ -7,7 +7,14 @@ from pathlib import Path
 from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, Session, mapped_column, relationship
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    Session,
+    mapped_column,
+    relationship,
+)
 
 
 class DuplicateKeyException(BaseException):
@@ -30,15 +37,21 @@ class Word(Base):
     __tablename__ = "word"
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     content: Mapped[str] = mapped_column(String(2000))
-    tgs_: Mapped[set[Tag]] = relationship(secondary=association_table, lazy="joined", init=False, repr=False)
+    tgs_: Mapped[set[Tag]] = relationship(
+        secondary=association_table, lazy="joined", init=False, repr=False
+    )
     tags: AssociationProxy[set[str]] = association_proxy("tgs_", "name")
-    word_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False, repr=False)
+    word_id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4, init=False, repr=False
+    )
 
 
 class Tag(Base, unsafe_hash=True):
     __tablename__ = "tag"
     name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    tag_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4, init=False, repr=False)
+    tag_id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4, init=False, repr=False
+    )
 
 
 class DBPersistence:
@@ -58,7 +71,9 @@ class DBPersistence:
             word = session.scalar(select(Word).where(Word.name == name))
         return word
 
-    def update_word(self, name: str, content: str = None, tags: set[str] = None, new_name: str = None):
+    def update_word(
+        self, name: str, content: str = None, tags: set[str] = None, new_name: str = None
+    ):
         """Update the word with the content, tags, new name, or all three"""
         # This first, less likely to fail
         # specifically tags is not None, because setting the list of tags to `[]` is legal

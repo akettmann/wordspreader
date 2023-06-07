@@ -123,15 +123,9 @@ class WordSpreader(UserControl):
             for word in self.db.get_words_filtered()
         ]
 
-    def _build_keywords(self, current_tags: list[Tab] = None) -> list[Tab]:
-        set(self.db.get_all_tags())
-        # This will be empty if the current_tags is not provided, so we make all of them
-        {t.text for t in current_tags or []}
-        tabs = [Tab(text="all")]
-        tabs.extend([Tab(text=t) for t in self.db.get_all_tags()])
-        return tabs
-
     def update(self):
+        self.word_display.update()
+        self.word_entry.update()
         super().update()
 
     def db_word_to_flet_word(self, db_word: Word) -> Words:
@@ -160,12 +154,12 @@ def main(page: Page):
 
 
 def test_main(page: Page):
-    page.title = "Word Spreader"
-    page.horizontal_alignment = "center"
-    page.scroll = "adaptive"
-    # create application instance
-    app = WordSpreader.default_app_dir_db()
-    page.add(app.word_display)
+    import yaml
+
+    yaml_file = Path("examples.yaml")
+    data = yaml.safe_load(yaml_file.read_text())
+    for word_dict in data.get("words"):
+        page.add(Words(**word_dict, edit_me=None, delete_me=None))
 
 
 # logging.basicConfig(level=logging.INFO)
