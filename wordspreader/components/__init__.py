@@ -37,31 +37,14 @@ class Words(UserControl):
         self._tags = sorted(tags)
         self.delete_me = delete_me
         self.edit_me = edit_me
-        self.editing: str | None = None
 
     @property
     def words(self):
         return self._words
 
-    @words.setter
-    def words(self, value):
-        self.edit_me(content=value)
-        self._words = value
-
     @property
     def title(self):
         return self._title
-
-    @title.setter
-    def title(self, value):
-        # Updates the database
-        self.edit_me(new_name=value)
-        # Updates my local value
-        self._title = value
-        # Updates the widget
-        self.title_text.value = value
-        # Updates the UI
-        self.title_widget.update()
 
     @property
     def tags(self) -> list[str]:
