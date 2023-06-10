@@ -15,7 +15,7 @@ from flet_core import (
 from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 from wordspreader.components import Words
-from wordspreader.persistence import DBPersistence
+from wordspreader.persistence import DBPersistence, Word
 
 
 # noinspection PyAttributeOutsideInit
@@ -88,9 +88,8 @@ class WordDisplay(UserControl):
             tabs=self._build_keywords(),
         )
         self.words = Column(controls=self._build_all_words())
-        self.words.controls.insert(0, self.keywords)
 
-        return [self.keywords, self.words]
+        return Column([self.keywords, self.words])
 
     def delete_words(self, words: Words):
         self.db.delete_word(words.title)
@@ -126,3 +125,12 @@ class WordDisplay(UserControl):
             )
             for word in self.db.get_words_filtered()
         ]
+
+    def update(self):
+        if set(self.db.get_all_tags()) not in {t.text for t in self.keywords.tabs}:
+            self.keywords.tabs = self._build_keywords()
+        if {w.name for w in self.db.get_words_filtered()} not in {
+            w.text for w in self.words.controls[1:]
+        }:
+            self.words.controls = self._build_all_words()
+        super().update()

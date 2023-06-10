@@ -1,5 +1,6 @@
 words:
   - title: Zarya Shield Powerup
+    # noinspection SpellCheckingInspection
     words: Zarya gets stronger when her bubble shields take damage
     tags:
       - zarya

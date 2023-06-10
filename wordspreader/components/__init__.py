@@ -1,5 +1,6 @@
 from flet_core import (
     ButtonStyle,
+    FloatingActionButton,
     FontWeight,
     IconButton,
     ListTile,
@@ -16,6 +17,10 @@ from flet_core import (
 
 
 class Words(UserControl):
+    """
+    One instance is for one Words entry, its title, content and tags
+    """
+
     def __init__(
         self, title: str, words: str, tags: set[str], edit_me: callable, delete_me: callable
     ):
@@ -73,6 +78,7 @@ class Words(UserControl):
             subtitle=self.words_text,
             trailing=self.popup_menu,
         )
+
         return self.list_tile
 
     def delete_clicked(self, _):

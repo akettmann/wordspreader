@@ -1,138 +1,131 @@
-import logging
-from typing import Any
+from typing import Literal
 
+import flet as ft
 from flet_core import (
-    ClipBehavior,
-    Control,
-    ControlEvent,
-    IconButton,
-    OptionalNumber,
-    Ref,
+    Column,
+    Container,
+    CrossAxisAlignment,
+    FloatingActionButton,
+    MainAxisAlignment,
     ResponsiveRow,
     Row,
     Text,
     TextField,
-    UserControl,
-    colors,
+    TextThemeStyle,
     icons,
 )
-from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
+
+MODE_TYPE = Literal["edit", "new"]
 
 
-class WordEntry(UserControl):
-    def __init__(
-        self,
-        new_word: callable,
-        controls: list[Control] | None = None,
-        ref: Ref | None = None,
-        width: OptionalNumber = None,
-        height: OptionalNumber = None,
-        left: OptionalNumber = None,
-        top: OptionalNumber = None,
-        right: OptionalNumber = None,
-        bottom: OptionalNumber = None,
-        expand: None | bool | int = None,
-        col: ResponsiveNumber | None = None,
-        opacity: OptionalNumber = None,
-        rotate: RotateValue = None,
-        scale: ScaleValue = None,
-        offset: OffsetValue = None,
-        aspect_ratio: OptionalNumber = None,
-        animate_opacity: AnimationValue = None,
-        animate_size: AnimationValue = None,
-        animate_position: AnimationValue = None,
-        animate_rotation: AnimationValue = None,
-        animate_scale: AnimationValue = None,
-        animate_offset: AnimationValue = None,
-        on_animation_end=None,
-        visible: bool | None = None,
-        disabled: bool | None = None,
-        data: Any = None,
-        clip_behavior: ClipBehavior | None = None,
-    ):
-        super().__init__(
-            controls,
-            ref,
-            width,
-            height,
-            left,
-            top,
-            right,
-            bottom,
-            expand,
-            col,
-            opacity,
-            rotate,
-            scale,
-            offset,
-            aspect_ratio,
-            animate_opacity,
-            animate_size,
-            animate_position,
-            animate_rotation,
-            animate_scale,
-            animate_offset,
-            on_animation_end,
-            visible,
-            disabled,
-            data,
-            clip_behavior,
-        )
+class WordModal(ft.UserControl):
+    def __init__(self, new_word: callable, edit_word: callable):
+        super().__init__()
         self.new_word = new_word
-        self.new_title = TextField(
-            label="Title the words.",
-            expand=True,
-        )
-        self.new_words = TextField(label="Provide the words.", expand=True, multiline=True)
-        self.new_tags_entry = TextField(
-            label="Provide the tags (Optional)",
-            expand=True,
-            on_submit=self.add_new_tag,
-            counter_text="Press enter to submit a tag",
-        )
-        self.new_tags_entered = Row()
-        self.add_new_words = IconButton(
-            icons.ADD, on_click=self.add_clicked, icon_color=colors.GREEN
-        )
+        self.edit_word = edit_word
+        self._mode: MODE_TYPE = "new"
+        self.orig_key: str | None = None
 
+    # noinspection PyAttributeOutsideInit
     def build(self):
-        return ResponsiveRow(
-            controls=[
-                self.new_title,
-                self.new_words,
-                self.new_tags_entry,
-                self.new_tags_entered,
-                self.add_new_words,
+        def add_tag(_):
+            tag = self._tags.value.strip()
+            if tag not in self.tags_set and tag:
+                self._tag_display.controls.append(Text(tag))
+                self._tag_display.update()
+                self.tags_set.add(tag)
+            self._tags.value = ""
+            self._tags.focus()
+            self._tags.update()
+
+        def reset():
+            self._title.value = ""
+            self._words.value = ""
+            self._tags.value = ""
+            self.tags_set = set()
+            self.update()
+
+        def add_word(_):
+            title = self._title.value.strip()
+            words = self._words.value.strip()
+            if title and words:
+                self.new_word(title=self._title.value, words=self._words.value, tags=self.tags_set)
+            reset()
+
+        self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
+        self._title = TextField(label="Title")
+        self._words = TextField(label="Content", multiline=True, min_lines=3)
+        self._tags = TextField(
+            label="Keywords",
+            helper_text="Press Enter to submit a keyword to the list",
+            on_submit=add_tag,
+        )
+        self.tags_set = set()
+        self._tag_display = ResponsiveRow()
+        self._fab = FloatingActionButton(icon=icons.ADD, on_click=add_word)
+        self.column = Column(
+            [
+                self._header,
+                self._title,
+                self._words,
+                self._tags,
+                self._tag_display,
+                Row(
+                    [
+                        self._fab,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
             ],
             expand=True,
+            horizontal_alignment=CrossAxisAlignment.CENTER,
         )
+        self.container = Container(self.column)
 
-    def add_new_tag(self, e: ControlEvent):
-        new_tag_name = e.control.value
-        e.control.value = ""
-        self.new_tags_entry.focus()
-        for tag in self.new_tags_entered.controls:
-            if tag.value == new_tag_name:
-                # We already have this tag in the list
-                word_name = "UNTITLED" if not (tv := self.new_title.value) else tv
-                logging.info(
-                    f"Skipping adding duplicate tag `{new_tag_name}` to word `{word_name}`"
+        return self.container
+
+    @property
+    def title(self):
+        return self._title.value
+
+    @title.setter
+    def title(self, value):
+        self._title.value = value
+
+    @property
+    def words(self):
+        return self._words.value
+
+    @words.setter
+    def words(self, value):
+        self._words.value = value
+
+    @property
+    def tags(self):
+        return self._tags.value
+
+    @tags.setter
+    def tags(self, value):
+        self._tags.value = value
+
+    @property
+    def mode(self) -> MODE_TYPE:
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        match value:
+            case "new":
+                pass
+            case "edit":
+                pass
+            case _:
+                raise RuntimeError(
+                    f"Invalid set value, received `{value}` expected one of {MODE_TYPE.__args__}"
                 )
-                return
-        self.new_tags_entered.controls.append(Text(new_tag_name))
-        self.new_tags_entered.update()
-        self.new_tags_entry.update()
+        self._mode = value
 
-    def reset(self):
-        self.new_title.value = ""
-        self.new_words.value = ""
-        self.new_tags_entered.controls.clear()
-        self.new_title.focus()
-        self.update()
-
-    def add_clicked(self, _: ControlEvent):
-        if self.new_title.value:
-            tags = {t.value for t in self.new_tags_entered.controls}
-
-            self.new_word(self.new_title.value, self.new_words.value, tags)
-            self.reset()
+    def submit(self):
+        match self._mode:
+            case "new":
+                self.new_word(name=self.title, content=self.words, tags=self.tags)

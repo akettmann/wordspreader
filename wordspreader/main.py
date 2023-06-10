@@ -12,12 +12,33 @@ from flet import (
     Text,
     UserControl,
 )
-from flet_core import ClipBehavior, Control, OptionalNumber, Ref
-from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
+from flet_core import (
+    BottomSheet,
+    ClipBehavior,
+    Control,
+    ControlEvent,
+    FloatingActionButton,
+    IconButton,
+    OptionalNumber,
+    Ref,
+    TextThemeStyle,
+    colors,
+    icons,
+)
+from flet_core.types import (
+    AnimationValue,
+    MainAxisAlignment,
+    OffsetValue,
+    ResponsiveNumber,
+    RotateValue,
+    ScaleValue,
+)
 
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
-from wordspreader.components.wordentry import WordEntry
+from wordspreader.components.wordentry import WordModal
+
+# from wordspreader.components.wordentry import WordEntry
 from wordspreader.persistence import DBPersistence, Word
 
 
@@ -82,37 +103,55 @@ class WordSpreader(UserControl):
             clip_behavior,
         )
 
+        def open_bs(_):
+            self.bs.open = True
+            self.bs.update()
+
+        def close_bs(_):
+            self.bas.open = False
+            self.bas.update()
+
         self.db = db
-        self.word_entry = WordEntry(self.new_word)
         self.word_display = WordDisplay(self.db)
+        self.word_modal = WordModal(self.new_word, self.db.update_word)
+        self.bs = BottomSheet(self.word_modal, open=True)
+        self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=open_bs)
 
     @classmethod
     def default_app_dir_db(cls):
         """Creates an instance using the default"""
+        cls.default_db_path.parent.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Using file path `{cls.default_db_path}` for the database")
+        return cls(DBPersistence.from_file(cls.default_db_path))
+
+    def did_mount(self):
+        self.page.floating_action_button = self.fab
+        self.page.overlay.append(self.bs)
+        self.page.add(self.fab)
+
+    @classmethod
+    @property
+    def default_db_path(cls) -> Path:
         dirs = appdirs.AppDirs("WordSpreader", "mriswithe")
-        db_file = Path(dirs.user_data_dir) / "wordspreader.sqlite3"
-        db_file.parent.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Using file path `{db_file}` for the database")
-        return cls(DBPersistence.from_file(db_file))
+        return Path(dirs.user_data_dir) / "wordspreader.sqlite3"
 
     def build(self):
         # application's root control (i.e. "view") containing all other controls
         return Column(
             controls=[
                 Row(
-                    [Text(value="Words to Spread", style=flet.TextThemeStyle.HEADLINE_MEDIUM)],
-                    alignment=flet.MainAxisAlignment.CENTER,
+                    [
+                        Text(value="Words to Spread", style=TextThemeStyle.HEADLINE_MEDIUM),
+                        IconButton(icon=icons.UPLOAD, on_click=test_add_examples_to_db),
+                    ],
+                    alignment=MainAxisAlignment.CENTER,
                 ),
-                Column(
-                    spacing=25,
-                    controls=[self.word_entry, self.word_display],
-                ),
+                self.word_display,
             ],
         )
 
     def update(self):
         self.word_display.update()
-        self.word_entry.update()
         super().update()
 
     def db_word_to_flet_word(self, db_word: Word) -> Words:
@@ -126,6 +165,8 @@ class WordSpreader(UserControl):
 
     def new_word(self, title: str, words: str, tags: set[str] = None) -> Words:
         db_word = self.db.new_word(title, words, tags)
+        self.bs.open = False
+        self.word_display.update()
         self.update()
         return self.db_word_to_flet_word(db_word)
 
@@ -141,12 +182,33 @@ def main(page: Page):
 
 
 def test_main(page: Page):
+    for word_dict in test_load_examples().get("words"):
+        page.add(Words(**word_dict, edit_me=None, delete_me=None))
+
+
+def test_translate(word_dict: dict):
+    return {
+        "name": word_dict.get("title"),
+        "content": word_dict.get("words"),
+        "tags": word_dict.get("tags", set()),
+    }
+
+
+def test_add_examples_to_db(e: ControlEvent):
+    p: Page = e.page
+    app = p.controls[0]
+    db = app.db
+    for word_dict in test_load_examples().get("words"):
+        db.new_word(**test_translate(word_dict))
+    app.word_display.update()
+
+
+def test_load_examples():
     import yaml
 
-    yaml_file = Path("examples.yaml")
+    yaml_file = Path(__file__).parent.parent / "examples.yaml"
     data = yaml.safe_load(yaml_file.read_text())
-    for word_dict in data.get("words"):
-        page.add(Words(**word_dict, edit_me=None, delete_me=None))
+    return data
 
 
 # logging.basicConfig(level=logging.INFO)
