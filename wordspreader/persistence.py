@@ -61,12 +61,22 @@ class DBPersistence:
         return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
     def new_word(self, name: str, content: str, tags: set[str] = None) -> Word:
-        word = Word(name=name, content=content, tags=tags)
         with self._get_session() as session:
+            tags = self.resolve_tags(tags)
+            word = Word(name=name, content=content, tags=tags)
             session.add(word)
             session.commit()
             word = session.scalar(select(Word).where(Word.name == name))
         return word
+
+    def resolve_tags(self, tags: set[str]):
+        with self._get_session() as session:
+            tags_from_db = session.execute(select(Tag).where(Tag.name.in_(tags))).unique().scalars()
+            found_tag_names = {tag.name for tag in tags_from_db}
+            created_tags = [Tag(name=t) for t in tags - found_tag_names]
+            session.add_all(created_tags)
+            session.commit()
+        return tags_from_db + created_tags
 
     def update_word(
         self, name: str, content: str = None, tags: set[str] = None, new_name: str = None
@@ -102,12 +112,6 @@ class DBPersistence:
     def get_words_like(self, name: str) -> Iterator[Word]:
         with self._get_session() as session:
             yield from session.execute(select(Word).where(Word.name.like(name))).unique().scalars()
-
-    def add_tag_to_word(self, name: str, tag: str):
-        with self._get_session() as session:
-            word = self._get_word(session, name, for_update=True)
-            word.tags.append(Tag(name=tag))
-            session.commit()
 
     def get_all_tags(self) -> Iterator[str]:
         with self._get_session() as session:
