@@ -126,11 +126,28 @@ class WordDisplay(UserControl):
             for word in self.db.get_words_filtered()
         ]
 
+    @staticmethod
+    def _keyword_key(element: Tab):
+        match element:
+            case "all":
+                return (0, Tab.text)
+            case _:
+                return (1, Tab.text)
+
+    def _sort_keywords(self):
+        self.keywords.tabs.sort(key=WordDisplay._keyword_key)
+        self.keywords.update()
+
     def update(self):
-        if set(self.db.get_all_tags()) not in {t.text for t in self.keywords.tabs}:
+        current_tags = {t.text for t in self.keywords.tabs}
+        all_tags_from_db = set(self.db.get_all_tags())
+        if missing_tags := all_tags_from_db - current_tags:
             self.keywords.tabs = self._build_keywords()
-        if {w.name for w in self.db.get_words_filtered()} not in {
-            w.text for w in self.words.controls[1:]
-        }:
+            self.keywords.update()
+        all_word_names_from_db = {w.name for w in self.db.get_words_filtered()}
+        current_word_names = {w.title for w in self.words.controls[1:]}
+        if missing_words := all_word_names_from_db - current_word_names:
             self.words.controls = self._build_all_words()
+            self.words.update()
+        self._sort_keywords()
         super().update()
