@@ -37,8 +37,6 @@ from flet_core.types import (
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
 from wordspreader.components.wordentry import WordModal
-
-# from wordspreader.components.wordentry import WordEntry
 from wordspreader.persistence import DBPersistence, Word
 
 
@@ -163,12 +161,11 @@ class WordSpreader(UserControl):
             partial(self.db.delete_word, db_word.name),
         )
 
-    def new_word(self, title: str, words: str, tags: set[str] = None) -> Words:
-        db_word = self.db.new_word(title, words, tags)
+    def new_word(self, title: str, words: str, tags: set[str] = None):
+        self.db.new_word(title, words, tags)
         self.bs.open = False
         self.word_display.update()
-        self.update()
-        return self.db_word_to_flet_word(db_word)
+        self.word_modal.reset()
 
 
 def main(page: Page):
