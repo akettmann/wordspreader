@@ -29,7 +29,7 @@ association_table = Table(
     "word_to_tag",
     Base.metadata,
     Column("word_id", ForeignKey("word.word_id"), primary_key=True),
-    Column("tag_id", ForeignKey("tag.tag_id"), primary_key=True),
+    Column("tag_id", ForeignKey("tag.name"), primary_key=True),
 )
 
 
@@ -48,10 +48,7 @@ class Word(Base):
 
 class Tag(Base, unsafe_hash=True):
     __tablename__ = "tag"
-    name: Mapped[str] = mapped_column(String(100), primary_key=True)
-    tag_id: Mapped[uuid.UUID] = mapped_column(
-        primary_key=True, default=uuid.uuid4, init=False, repr=False
-    )
+    name: Mapped[str] = mapped_column(String(100), primary_key=True, unique=True)
 
 
 class DBPersistence:
