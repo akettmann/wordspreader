@@ -26,6 +26,13 @@ class WordModal(ft.UserControl):
         self._mode: MODE_TYPE = "new"
         self.orig_key: str | None = None
 
+    def reset(self):
+        self._title.value = ""
+        self._words.value = ""
+        self._tags.value = ""
+        self.tags_set = set()
+        self.update()
+
     # noinspection PyAttributeOutsideInit
     def build(self):
         def add_tag(_):
@@ -37,13 +44,6 @@ class WordModal(ft.UserControl):
             self._tags.value = ""
             self._tags.focus()
             self._tags.update()
-
-        def reset():
-            self._title.value = ""
-            self._words.value = ""
-            self._tags.value = ""
-            self.tags_set = set()
-            self.update()
 
         def add_word(_):
             title = self._title.value.strip()
