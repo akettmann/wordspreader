@@ -50,7 +50,7 @@ class WordModal(ft.UserControl):
             words = self._words.value.strip()
             if title and words:
                 self.new_word(title=self._title.value, words=self._words.value, tags=self.tags_set)
-            reset()
+            self.reset()
 
         self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
         self._title = TextField(label="Title")
