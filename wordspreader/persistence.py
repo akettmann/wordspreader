@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Iterator
+from itertools import chain
 from pathlib import Path
 
 from sqlalchemy import Column, ForeignKey, String, Table, create_engine, delete, select
@@ -62,21 +63,23 @@ class DBPersistence:
 
     def new_word(self, name: str, content: str, tags: set[str] = None) -> Word:
         with self._get_session() as session:
-            tags = self.resolve_tags(tags)
-            word = Word(name=name, content=content, tags=tags)
+            db_tags = self.resolve_tags(tags, session)
+            word = Word(name=name, content=content, tags={})
+            word.tgs_ = db_tags
             session.add(word)
             session.commit()
             word = session.scalar(select(Word).where(Word.name == name))
         return word
 
-    def resolve_tags(self, tags: set[str]):
-        with self._get_session() as session:
-            tags_from_db = session.execute(select(Tag).where(Tag.name.in_(tags))).unique().scalars()
-            found_tag_names = {tag.name for tag in tags_from_db}
-            created_tags = [Tag(name=t) for t in tags - found_tag_names]
-            session.add_all(created_tags)
-            session.commit()
-        return tags_from_db + created_tags
+    def resolve_tags(self, tags: set[str], session: Session) -> set[Tag]:
+        tags_from_db = list(
+            session.execute(select(Tag).where(Tag.name.in_(tags))).unique().scalars()
+        )
+        found_tag_names = {tag.name for tag in tags_from_db}
+        created_tags = [Tag(name=t) for t in tags - found_tag_names]
+        session.add_all(created_tags)
+        session.commit()
+        return set(chain(created_tags, tags_from_db))
 
     def update_word(
         self, name: str, content: str = None, tags: set[str] = None, new_name: str = None

@@ -118,3 +118,9 @@ def test__get_words_filtered(names: list[str], contents: list[str], tags: list[s
         assert tag in tags2
         assert tag not in tags1
         get_by_tag_and_check(tag, word2)
+
+
+def test__add_two_words_with_the_same_tag(db_factory):
+    db: "DBPersistence" = db_factory()
+    word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
+    word2 = make_get_check("word2", "", {"thing", "stuff"}, db)
