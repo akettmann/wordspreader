@@ -106,8 +106,8 @@ class WordSpreader(UserControl):
             self.bs.update()
 
         def close_bs(_):
-            self.bas.open = False
-            self.bas.update()
+            self.bs.open = False
+            self.bs.update()
 
         self.db = db
         self.word_display = WordDisplay(self.db)
