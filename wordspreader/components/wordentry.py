@@ -18,6 +18,7 @@ from flet_core import (
 MODE_TYPE = Literal["edit", "new"]
 
 
+# noinspection PyAttributeOutsideInit
 class WordModal(ft.UserControl):
     def __init__(self, new_word: callable, edit_word: callable):
         super().__init__()
@@ -33,7 +34,6 @@ class WordModal(ft.UserControl):
         self.tags_set = set()
         self.update()
 
-    # noinspection PyAttributeOutsideInit
     def build(self):
         def add_tag(_):
             tag = self._tags.value.strip()
