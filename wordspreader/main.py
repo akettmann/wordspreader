@@ -112,7 +112,7 @@ class WordSpreader(UserControl):
         self.db = db
         self.word_display = WordDisplay(self.db)
         self.word_modal = WordModal(self.new_word, self.db.update_word)
-        self.bs = BottomSheet(self.word_modal, open=True)
+        self.bs = BottomSheet(self.word_modal)
         self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=open_bs)
 
     @classmethod
@@ -140,7 +140,6 @@ class WordSpreader(UserControl):
                 Row(
                     [
                         Text(value="Words to Spread", style=TextThemeStyle.HEADLINE_MEDIUM),
-                        IconButton(icon=icons.UPLOAD, on_click=test_add_examples_to_db),
                     ],
                     alignment=MainAxisAlignment.CENTER,
                 ),
@@ -178,36 +177,4 @@ def main(page: Page):
     page.add(app)
 
 
-def test_main(page: Page):
-    for word_dict in test_load_examples().get("words"):
-        page.add(Words(**word_dict, edit_me=None, delete_me=None))
-
-
-def test_translate(word_dict: dict):
-    return {
-        "name": word_dict.get("title"),
-        "content": word_dict.get("words"),
-        "tags": word_dict.get("tags", set()),
-    }
-
-
-def test_add_examples_to_db(e: ControlEvent):
-    p: Page = e.page
-    app = p.controls[0]
-    db = app.db
-    for word_dict in test_load_examples().get("words"):
-        db.new_word(**test_translate(word_dict))
-    app.word_display.update()
-
-
-def test_load_examples():
-    import yaml
-
-    yaml_file = Path(__file__).parent.parent / "examples.yaml"
-    data = yaml.safe_load(yaml_file.read_text())
-    return data
-
-
-# logging.basicConfig(level=logging.INFO)
-# flet.app(target=test_main)
 flet.app(target=main)
