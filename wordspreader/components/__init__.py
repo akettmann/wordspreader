@@ -28,8 +28,8 @@ class Words(UserControl):
         self._title = title
         self._words = words
         self._tags = sorted(tags)
-        self.delete_me = delete_me
         self.edit_me = edit_me
+        self.delete_me = delete_me
 
     @property
     def words(self):
