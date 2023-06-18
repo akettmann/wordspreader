@@ -1,9 +1,13 @@
 words:
   - title: Zarya Shield Powerup
-    # noinspection SpellCheckingInspection
     words: Zarya gets stronger when her bubble shields take damage
     tags:
       - zarya
+      - feed
+  - title: Sigma absorb projectiles
+    words: Sigma can absorb projectiles and then turns the damage into shields
+    tags:
+      - sigma
       - feed
   - title: Torbjorn auto-reload
     words: Torbjorn will reload his gun automatically after 2 seconds of his hammer being out
