@@ -19,7 +19,8 @@ def db():
 
 @fixture(scope="session")
 def db_factory():
-    from wordspreader.persistence import Base, DBPersistence
+    from wordspreader.ddl import Base
+    from wordspreader.persistence import DBPersistence
 
     engine = create_engine("sqlite:///:memory:", echo=ENGINE_ECHO)
 

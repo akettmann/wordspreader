@@ -5,8 +5,8 @@ from hypothesis import strategies as st
 from pytest import fixture, skip
 
 if TYPE_CHECKING:
+    from wordspreader.ddl import Word
     from wordspreader.main import WordSpreader
-    from wordspreader.persistence import Word
 skip("Can't handle the flet yet", allow_module_level=True)
 
 

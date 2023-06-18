@@ -4,7 +4,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 from pytest import raises
 
-from wordspreader.persistence import Tag, Word
+from wordspreader.ddl import Tag, Word
 
 if TYPE_CHECKING:
     from wordspreader.persistence import DBPersistence
@@ -65,7 +65,7 @@ def test_delete_word(name: str, content: str, tags: set[str], db_factory: callab
 
 @given(names=st_name_list, content=st_content, tags=st_tags)
 def test__rename_word(names: list[str, str], content: str, tags: set[str], db_factory: callable):
-    from wordspreader.persistence import DuplicateKeyException
+    from wordspreader.ddl import DuplicateKeyException
 
     name, new_name = names
     db: "DBPersistence" = db_factory()
@@ -122,5 +122,13 @@ def test__get_words_filtered(names: list[str], contents: list[str], tags: list[s
 
 def test__add_two_words_with_the_same_tag(db_factory):
     db: "DBPersistence" = db_factory()
+    make_get_check("word1", "", {"thing", "stuff"}, db)
+    make_get_check("word2", "", {"thing", "stuff"}, db)
+
+
+def test__orphans_are_cleaned_up(db_factory):
+    db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
-    word2 = make_get_check("word2", "", {"thing", "stuff"}, db)
+    db.delete_word(word1.name)
+    num_tags = list(db.get_all_tags())
+    assert len(num_tags) == 0, "Tags should be cleaned up!"

@@ -28,7 +28,8 @@ from flet_core.types import (
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
 from wordspreader.components.wordentry import WordModal
-from wordspreader.persistence import DBPersistence, Word
+from wordspreader.ddl import Word
+from wordspreader.persistence import DBPersistence
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
