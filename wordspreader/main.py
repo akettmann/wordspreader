@@ -24,6 +24,7 @@ from flet_core import (
 from flet_core.types import (
     MainAxisAlignment,
 )
+from rich.traceback import install
 
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
@@ -37,12 +38,17 @@ class WordSpreader(UserControl):
         self.word_modal.setup_edit_word(word)
         self.open_bs()
 
+    def word_entry_edit_word(self, *args, **kwargs):
+        self.db.update_word(*args, **kwargs)
+        self.word_display.update()
+        self.close_bs()
+
     def __init__(self, db: DBPersistence):
         super().__init__()
 
         self.db = db
         self.word_display = WordDisplay(self.db, self.setup_edit_word)
-        self.word_modal = WordModal(self.new_word, self.db.update_word)
+        self.word_modal = WordModal(self.new_word, self.word_entry_edit_word)
         self.bs = BottomSheet(self.word_modal)
         self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.open_bs)
         self.popup = PopupMenuButton(
@@ -137,6 +143,7 @@ class WordSpreader(UserControl):
                         pass
 
 
+install()
 _db = WordSpreader.default_app_dir_db()
 
 

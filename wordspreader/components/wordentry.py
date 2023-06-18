@@ -101,7 +101,10 @@ class WordModal(ft.UserControl):
         self.update()
 
     def save_edited_word(self):
-        pass
+        # If the names are the same, it should send None
+        new_name = None if self.orig_key == (n := self._title.value.strip()) else n
+        self.edit_word(self.orig_key, self._words.value.strip(), self.tags_set, new_name)
+        self._reset()
 
     @property
     def title(self):
@@ -145,8 +148,3 @@ class WordModal(ft.UserControl):
                     f"Invalid set value, received `{value}` expected one of {MODE_TYPE.__args__}"
                 )
         self._mode = value
-
-    def submit(self):
-        match self._mode:
-            case "new":
-                self.new_word(name=self.title, content=self.words, tags=self.tags)

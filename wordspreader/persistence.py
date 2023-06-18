@@ -92,7 +92,7 @@ class DBPersistence:
         # Also content is not allowed to be null
         if content is not None or tags is not None:
             self._update_word(name, content, tags)
-        if new_name:
+        if new_name and new_name != name:
             # Might fail due to duplicate key
             self._rename_word(name, new_name)
 
