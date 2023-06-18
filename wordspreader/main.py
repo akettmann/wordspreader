@@ -24,7 +24,6 @@ from flet_core import (
 from flet_core.types import (
     MainAxisAlignment,
 )
-from rich.traceback import install
 
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
@@ -143,7 +142,6 @@ class WordSpreader(UserControl):
                         pass
 
 
-install()
 _db = WordSpreader.default_app_dir_db()
 
 
