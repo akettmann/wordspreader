@@ -14,18 +14,13 @@ from wordspreader.persistence import DBPersistence
 
 # noinspection PyAttributeOutsideInit
 class WordDisplay(UserControl):
-    def __init__(
-        self,
-        db: DBPersistence,
-    ):
+    def __init__(self, db: DBPersistence, edit_word: callable):
         super().__init__()
         self.db = db
+        self.edit_word = edit_word
 
     def build(self):
-        self.keywords = Tabs(
-            on_change=self.filter_changed,
-            tabs=self._build_keywords(),
-        )
+        self.keywords = Tabs(on_change=self.filter_changed, tabs=self._build_keywords())
         self.words = Column(controls=self._build_all_words())
 
         return Column([self.keywords, self.words])
@@ -59,7 +54,7 @@ class WordDisplay(UserControl):
                 word.name,
                 word.content,
                 word.tags,
-                partial(self.db.update_word, word.name),
+                self.edit_word,
                 self.delete_words,
             )
             for word in self.db.get_words_filtered()

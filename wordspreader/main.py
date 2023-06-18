@@ -33,10 +33,15 @@ from wordspreader.persistence import DBPersistence, Word
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
+    def setup_edit_word(self, word: Words):
+        self.word_modal.setup_edit_word(word)
+        self.open_bs()
+
     def __init__(self, db: DBPersistence):
         super().__init__()
+
         self.db = db
-        self.word_display = WordDisplay(self.db)
+        self.word_display = WordDisplay(self.db, self.setup_edit_word)
         self.word_modal = WordModal(self.new_word, self.db.update_word)
         self.bs = BottomSheet(self.word_modal)
         self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.open_bs)

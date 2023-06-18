@@ -67,7 +67,7 @@ class Words(UserControl):
         )
         self.popup_menu = PopupMenuButton(
             items=[
-                PopupMenuItem(text="Edit", on_click=self.edit_me),
+                PopupMenuItem(text="Edit", on_click=lambda _: self.edit_me(self)),
                 PopupMenuItem(text="Delete", on_click=self.delete_clicked),
             ],
         )
