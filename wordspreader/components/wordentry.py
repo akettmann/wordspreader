@@ -97,6 +97,7 @@ class WordModal(ft.UserControl):
         self._title.value = self.orig_key = word.title
         self._words.value = word.words
         self._tag_display.controls = [Text(t) for t in word.tags]
+        self.tags_set = set(word.tags)
         self.mode = "edit"
         self.update()
 
