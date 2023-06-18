@@ -163,8 +163,8 @@ class WordSpreader(UserControl):
     def new_word(self, title: str, words: str, tags: set[str] = None):
         self.db.new_word(title, words, tags)
         self.bs.open = False
-        self.word_display.update()
-        self.word_modal.reset()
+        self.bs.update()
+        self.update()
 
 
 def main(page: Page):

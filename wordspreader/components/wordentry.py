@@ -4,6 +4,7 @@ import flet as ft
 from flet_core import (
     Column,
     Container,
+    ControlEvent,
     CrossAxisAlignment,
     FloatingActionButton,
     MainAxisAlignment,
@@ -14,6 +15,8 @@ from flet_core import (
     TextThemeStyle,
     icons,
 )
+
+from wordspreader.components import Words
 
 MODE_TYPE = Literal["edit", "new"]
 
@@ -27,42 +30,49 @@ class WordModal(ft.UserControl):
         self._mode: MODE_TYPE = "new"
         self.orig_key: str | None = None
 
-    def reset(self):
+    def _reset(self):
         self._title.value = ""
         self._words.value = ""
         self._tags.value = ""
         self.tags_set = set()
         self.update()
 
+    def add_word(self):
+        title = self._title.value.strip()
+        words = self._words.value.strip()
+        if title and words:
+            self.new_word(title=title, words=words, tags=self.tags_set)
+        self._reset()
+
+    def add_tag(self, _):
+        tag = self._tags.value.strip()
+        if tag not in self.tags_set and tag:
+            self._tag_display.controls.append(Text(tag))
+            self._tag_display.update()
+            self.tags_set.add(tag)
+        self._tags.value = ""
+        self._tags.focus()
+        self._tags.update()
+
+    def save(self, _):
+        match self._mode:
+            case "new":
+                self.add_word()
+            case "edit":
+                self.save_edited_word()
+
     def build(self):
-        def add_tag(_):
-            tag = self._tags.value.strip()
-            if tag not in self.tags_set and tag:
-                self._tag_display.controls.append(Text(tag))
-                self._tag_display.update()
-                self.tags_set.add(tag)
-            self._tags.value = ""
-            self._tags.focus()
-            self._tags.update()
-
-        def add_word(_):
-            title = self._title.value.strip()
-            words = self._words.value.strip()
-            if title and words:
-                self.new_word(title=self._title.value, words=self._words.value, tags=self.tags_set)
-            self.reset()
-
         self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
         self._title = TextField(label="Title")
         self._words = TextField(label="Content", multiline=True, min_lines=3)
         self._tags = TextField(
             label="Keywords",
             helper_text="Press Enter to submit a keyword to the list",
-            on_submit=add_tag,
+            on_submit=self.add_tag,
         )
         self.tags_set = set()
         self._tag_display = ResponsiveRow()
-        self._fab = FloatingActionButton(icon=icons.ADD, on_click=add_word)
+        self._fab = FloatingActionButton(icon=icons.ADD, on_click=self.save)
         self.column = Column(
             [
                 self._header,
@@ -83,6 +93,16 @@ class WordModal(ft.UserControl):
         self.container = Container(self.column)
 
         return self.container
+
+    def setup_edit_word(self, word: Words):
+        self._title.value = self.orig_key = word.title
+        self._words.value = word.words
+        self._tag_display.controls = [Text(t) for t in word.tags]
+        self.mode = "edit"
+        self.update()
+
+    def save_edited_word(self):
+        pass
 
     @property
     def title(self):
