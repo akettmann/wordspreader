@@ -1,6 +1,5 @@
 from flet_core import (
     ButtonStyle,
-    FloatingActionButton,
     FontWeight,
     IconButton,
     ListTile,

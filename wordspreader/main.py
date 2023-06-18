@@ -62,6 +62,7 @@ class WordSpreader(UserControl):
     @classmethod
     def default_app_dir_db(cls):
         """Creates an instance using the default"""
+        # noinspection PyUnresolvedReferences
         cls.default_db_path.parent.mkdir(parents=True, exist_ok=True)
         logging.info(f"Using file path `{cls.default_db_path}` for the database")
         # noinspection PyTypeChecker

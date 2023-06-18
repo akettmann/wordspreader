@@ -4,7 +4,6 @@ import flet as ft
 from flet_core import (
     Column,
     Container,
-    ControlEvent,
     CrossAxisAlignment,
     FloatingActionButton,
     MainAxisAlignment,
@@ -140,6 +139,8 @@ class WordModal(ft.UserControl):
             case "edit":
                 pass
             case _:
+                # Pycharm doing weird stuff, acting like MODE_TYPE is the type it is describing.
+                # noinspection PyUnresolvedReferences
                 raise RuntimeError(
                     f"Invalid set value, received `{value}` expected one of {MODE_TYPE.__args__}"
                 )
