@@ -23,63 +23,8 @@ class WordDisplay(UserControl):
     def __init__(
         self,
         db: DBPersistence,
-        controls: list[Control] | None = None,
-        ref: Ref | None = None,
-        key: str | None = None,
-        width: OptionalNumber = None,
-        height: OptionalNumber = None,
-        left: OptionalNumber = None,
-        top: OptionalNumber = None,
-        right: OptionalNumber = None,
-        bottom: OptionalNumber = None,
-        expand: None | bool | int = None,
-        col: ResponsiveNumber | None = None,
-        opacity: OptionalNumber = None,
-        rotate: RotateValue = None,
-        scale: ScaleValue = None,
-        offset: OffsetValue = None,
-        aspect_ratio: OptionalNumber = None,
-        animate_opacity: AnimationValue = None,
-        animate_size: AnimationValue = None,
-        animate_position: AnimationValue = None,
-        animate_rotation: AnimationValue = None,
-        animate_scale: AnimationValue = None,
-        animate_offset: AnimationValue = None,
-        on_animation_end=None,
-        visible: bool | None = None,
-        disabled: bool | None = None,
-        data: Any = None,
-        clip_behavior: ClipBehavior | None = None,
     ):
-        super().__init__(
-            controls,
-            ref,
-            key,
-            width,
-            height,
-            left,
-            top,
-            right,
-            bottom,
-            expand,
-            col,
-            opacity,
-            rotate,
-            scale,
-            offset,
-            aspect_ratio,
-            animate_opacity,
-            animate_size,
-            animate_position,
-            animate_rotation,
-            animate_scale,
-            animate_offset,
-            on_animation_end,
-            visible,
-            disabled,
-            data,
-            clip_behavior,
-        )
+        super().__init__()
         self.db = db
 
     def build(self):
@@ -97,17 +42,17 @@ class WordDisplay(UserControl):
         self.update()
 
     def filter_changed(self, _: ControlEvent):
-        status = self.keywords.tabs[self.keywords.selected_index].text
-        if status == "all":
-            # Skipping the first object, it is the tabs object
-            for word in self.words.controls[1:]:
-                word.visible = True
-        else:
-            # Skipping the first object, it is the tabs object
-            for word in self.words.controls[1:]:
-                word: Words
-                word.visible = status in word.tags
-        self.update()
+        self._set_visibility_for_filter()
+        super().update()
+
+    def _set_visibility_for_filter(self):
+        match self.keywords.tabs[self.keywords.selected_index].text:
+            case "all":
+                for word in self.words.controls:
+                    word.visible = True
+            case str() as s:
+                for word in self.words.controls:
+                    word.visible = s in word.tags
 
     def _build_keywords(self) -> list[Tab]:
         tabs = [Tab(text="all")]
@@ -130,9 +75,9 @@ class WordDisplay(UserControl):
     def _keyword_key(element: Tab):
         match element:
             case "all":
-                return (0, Tab.text)
+                return 0, Tab.text
             case _:
-                return (1, Tab.text)
+                return 1, Tab.text
 
     def _sort_keywords(self):
         self.keywords.tabs.sort(key=WordDisplay._keyword_key)
@@ -141,12 +86,12 @@ class WordDisplay(UserControl):
     def update(self):
         current_tags = {t.text for t in self.keywords.tabs}
         all_tags_from_db = set(self.db.get_all_tags())
-        if missing_tags := all_tags_from_db - current_tags:
+        if _ := all_tags_from_db - current_tags:
             self.keywords.tabs = self._build_keywords()
             self.keywords.update()
         all_word_names_from_db = {w.name for w in self.db.get_words_filtered()}
         current_word_names = {w.title for w in self.words.controls[1:]}
-        if missing_words := all_word_names_from_db - current_word_names:
+        if _ := all_word_names_from_db - current_word_names:
             self.words.controls = self._build_all_words()
             self.words.update()
         self._sort_keywords()
