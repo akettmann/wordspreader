@@ -71,7 +71,8 @@ class DBPersistence:
             word = session.scalar(select(Word).where(Word.name == name))
         return word
 
-    def resolve_tags(self, tags: set[str], session: Session) -> set[Tag]:
+    @staticmethod
+    def resolve_tags(tags: set[str], session: Session) -> set[Tag]:
         tags_from_db = list(
             session.execute(select(Tag).where(Tag.name.in_(tags))).unique().scalars()
         )

@@ -1,7 +1,6 @@
 import logging
 from functools import partial
 from pathlib import Path
-from typing import Any
 
 import appdirs
 import flet
@@ -15,26 +14,15 @@ from flet import (
 from flet.utils import open_in_browser
 from flet_core import (
     BottomSheet,
-    ClipBehavior,
-    Control,
-    ControlEvent,
     FloatingActionButton,
-    IconButton,
-    OptionalNumber,
     PopupMenuButton,
     PopupMenuItem,
-    Ref,
     TextThemeStyle,
     colors,
     icons,
 )
 from flet_core.types import (
-    AnimationValue,
     MainAxisAlignment,
-    OffsetValue,
-    ResponsiveNumber,
-    RotateValue,
-    ScaleValue,
 )
 
 from wordspreader.components import Words
@@ -76,6 +64,7 @@ class WordSpreader(UserControl):
         """Creates an instance using the default"""
         cls.default_db_path.parent.mkdir(parents=True, exist_ok=True)
         logging.info(f"Using file path `{cls.default_db_path}` for the database")
+        # noinspection PyTypeChecker
         return DBPersistence.from_file(cls.default_db_path)
 
     def did_mount(self):
@@ -83,6 +72,7 @@ class WordSpreader(UserControl):
         self.page.overlay.append(self.bs)
         self.page.add(self.fab)
 
+    # noinspection PyPropertyDefinition
     @classmethod
     @property
     def default_db_path(cls) -> Path:
@@ -133,6 +123,8 @@ class WordSpreader(UserControl):
         for word in data.get("words"):
             match word:
                 case {"title": title, "words": words, "tags": tags}:
+                    # Using a bare except because we should only be eating SQLalchemy unique errors
+                    # noinspection PyPep8
                     try:
                         self.new_word(title, words, set(tags))
                     except:

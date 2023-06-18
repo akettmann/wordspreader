@@ -1,21 +1,15 @@
 from functools import partial
-from typing import Any
 
 from flet_core import (
-    ClipBehavior,
     Column,
-    Control,
     ControlEvent,
-    OptionalNumber,
-    Ref,
     Tab,
     Tabs,
     UserControl,
 )
-from flet_core.types import AnimationValue, OffsetValue, ResponsiveNumber, RotateValue, ScaleValue
 
 from wordspreader.components import Words
-from wordspreader.persistence import DBPersistence, Word
+from wordspreader.persistence import DBPersistence
 
 
 # noinspection PyAttributeOutsideInit
