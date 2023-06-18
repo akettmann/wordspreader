@@ -5,8 +5,18 @@ words:
     tags:
       - zarya
       - feed
-  - title: Autoreload
+  - title: Torbjorn auto-reload
     words: Torbjorn will reload his gun automatically after 2 seconds of his hammer being out
     tags:
       - torbjorn
+      - reload
+  - title: Wrecking Ball auto-reload
+    words: Wrecking Ball will reload his gun automatically after 2 seconds of being in ball form
+    tags:
+      - wrecking ball
+      - reload
+  - title: Lifeweaver auto-reload
+    words: Lifeweaver will reload his healing/spikes automatically after 2 seconds of the other weapon being equipped
+    tags:
+      - lifeweaver
       - reload
