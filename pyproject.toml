@@ -25,9 +25,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "appdirs",
   "flet",
   "sqlalchemy",
-  "appdirs"
+  "sqlalchemy-utils",
 ]
 
 [project.urls]
@@ -47,7 +48,6 @@ dependencies = [
   "pyyaml",
   "rich",
   "psycopg2",
-  "sqlalchemy-utils",
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
