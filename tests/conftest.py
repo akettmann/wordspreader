@@ -1,3 +1,4 @@
+import os
 from typing import TYPE_CHECKING
 
 from pytest import fixture
@@ -7,7 +8,7 @@ if TYPE_CHECKING:
     from wordspreader.main import WordSpreader
     from wordspreader.persistence import DBPersistence
 
-ENGINE_ECHO = True
+ENGINE_ECHO = True if not os.environ.get("ECHO_OFF", False) else False
 
 
 @fixture(scope="function")

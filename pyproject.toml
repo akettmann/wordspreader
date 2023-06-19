@@ -45,7 +45,9 @@ dependencies = [
   "watchdog",
   "hypothesis",
   "pyyaml",
-  "rich"
+  "rich",
+  "psycopg2",
+  "sqlalchemy-utils",
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"

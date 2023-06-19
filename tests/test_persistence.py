@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from hypothesis import given
 from hypothesis import strategies as st
-from pytest import raises
+from pytest import mark, raises
 
 from wordspreader.ddl import Tag, Word
 
@@ -126,9 +126,26 @@ def test__add_two_words_with_the_same_tag(db_factory):
     make_get_check("word2", "", {"thing", "stuff"}, db)
 
 
+@mark.skip("This is why we need to use the `wordspreader.persistence.DBPersistence.resolve_tags`")
+def test__add_two_words_with_the_same_tag_2(db_factory):
+    from wordspreader.ddl import Word
+
+    db: "DBPersistence" = db_factory()
+    words = Word(name="potato", content="", tags={})
+    words.tags.add("test")
+    words.tags.add("test2")
+    words2 = Word(name="potato2", content="", tags={})
+    words2.tags.add("test3")
+    words2.tags.add("test2")
+    with db._get_session() as session:
+        session.add_all([words, words2])
+        session.commit()
+
+
 def test__orphans_are_cleaned_up(db_factory):
     db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
+    assert len(list(db.get_all_tags())) == 2, "Tags should exist still"
     db.delete_word(word1.name)
-    num_tags = list(db.get_all_tags())
-    assert len(num_tags) == 0, "Tags should be cleaned up!"
+
+    assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up!"
