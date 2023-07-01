@@ -31,7 +31,7 @@ class Tag(Base):
 class Word(Base):
     __tablename__ = "words"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    name: Mapped[str] = mapped_column(init=True)
+    name: Mapped[str] = mapped_column(init=True, unique=True)
     content: Mapped[str]
     tag_objs: Mapped[set[Tag]] = relationship(
         "Tag",
