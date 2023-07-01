@@ -25,11 +25,7 @@ tagging = Table(
 class Tag(Base):
     __tablename__ = "tag"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-
-    name = Column(String(100), unique=True, nullable=False)
-
-    def __init__(self, name: str):
-        self.name = name
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, init=True)
 
     def __repr__(self):
         return f"Tag(name={self.name}, words={','.join([w.name for w in self.words])})"
@@ -38,7 +34,7 @@ class Tag(Base):
 class Word(Base):
     __tablename__ = "words"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True, init=True)
     content: Mapped[str]
     tag_objs: Mapped[set[Tag]] = relationship(
         "Tag",
