@@ -138,7 +138,6 @@ def test__orphans_are_cleaned_up(db_factory):
     assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up now"
 
 
-@mark.skip("Fails at present sadly")
 def test__orphans_are_cleaned_up_when_word_deleted(db_factory):
     db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)

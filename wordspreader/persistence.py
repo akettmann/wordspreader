@@ -59,7 +59,12 @@ class DBPersistence:
 
     def delete_word(self, name: str):
         with self._get_session() as session:
-            session.execute(delete(Word).where(Word.name == name))
+            word = (
+                session.execute(select(Word).where(Word.name == name).with_for_update())
+                .unique()
+                .scalar_one()
+            )
+            session.delete(word)
             session.commit()
 
     def get_words_filtered(self, category: str = None) -> Iterator[Word]:
