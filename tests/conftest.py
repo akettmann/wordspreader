@@ -11,13 +11,6 @@ if TYPE_CHECKING:
 ENGINE_ECHO = True if not os.environ.get("ECHO_OFF", False) else False
 
 
-@fixture(scope="function")
-def db():
-    from wordspreader.persistence import DBPersistence
-
-    yield DBPersistence(create_engine("sqlite:///:memory:", echo=ENGINE_ECHO))
-
-
 @fixture(scope="session")
 def db_factory():
     from wordspreader.ddl import Base
