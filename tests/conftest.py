@@ -16,17 +16,19 @@ def db_factory():
     from wordspreader.ddl import Base
     from wordspreader.persistence import DBPersistence
 
-    engine = create_engine("sqlite:///:memory:", echo=ENGINE_ECHO)
-
+    engine = create_engine("sqlite:///:memory:", echo=False)
+    # We emit DDL here
     one_db_lol = DBPersistence(engine)
+    engine.echo = ENGINE_ECHO
 
     def clean():
+        engine.echo = False
         # noinspection PyProtectedMember
         with one_db_lol._get_session() as session:
             for table in reversed(Base.metadata.sorted_tables):
                 session.execute(table.delete())
             session.commit()
-
+        engine.echo = ENGINE_ECHO
         # Base.metadata.drop_all(engine)
         # Base.metadata.create_all(engine)
 
