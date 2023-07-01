@@ -150,9 +150,5 @@ def test__orphans_are_cleaned_up(db_factory):
     db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
     assert len(list(db.get_all_tags())) == 2, "Tags should exist still"
-    db.delete_word(word1.name)
-    with db._get_session() as session:
-        for tag in session.execute(select(Tag)).scalars():
-            print(tag.words)
-
-    assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up!"
+    db.update_word(word1.name, tags=set())
+    assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up now"
