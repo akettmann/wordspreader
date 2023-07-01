@@ -27,9 +27,6 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, init=True)
 
-    def __repr__(self):
-        return f"Tag(name={self.name}, words={','.join([w.name for w in self.words])})"
-
 
 class Word(Base):
     __tablename__ = "words"
