@@ -130,8 +130,8 @@ class WordSpreader(UserControl):
     def load_examples(self, _):
         import yaml
 
-        with open("examples.yaml") as fp:
-            data = yaml.safe_load(fp.read())
+        example_file = Path(__file__).resolve(strict=True).parent / "examples.yaml"
+        data = yaml.safe_load(example_file.read_text())
         for word in data.get("words"):
             match word:
                 case {"title": title, "words": words, "tags": tags}:
