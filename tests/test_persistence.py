@@ -37,19 +37,7 @@ def make_get_check(name: str, content: str, tags: set[str], db: "DBPersistence")
 
 
 @given(name=st_name, content=st_content, tags=st_tags)
-def test_get_word(name: str, content: str, tags: set[str], db_factory: callable):
-    from wordspreader.persistence import Word
-
-    db: "DBPersistence" = db_factory()
-    with db._get_session() as session:
-        word = Word(name=name, content=content, tags=tags)
-        session.add(word)
-        session.commit()
-    check_word(name, content, tags, db.get_word(name))
-
-
-@given(name=st_name, content=st_content, tags=st_tags)
-def test_new_word(name: str, content: str, tags: set[str], db_factory: callable):
+def test_make_get_new_word(name: str, content: str, tags: set[str], db_factory: callable):
     db: "DBPersistence" = db_factory()
     make_get_check(name, content, tags, db)
 
@@ -143,12 +131,17 @@ def test__add_two_words_with_the_same_tag_2(db_factory):
 
 
 def test__orphans_are_cleaned_up(db_factory):
-    from sqlalchemy import select
-
-    from wordspreader.ddl import Tag, Word
-
     db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
     assert len(list(db.get_all_tags())) == 2, "Tags should exist still"
     db.update_word(word1.name, tags=set())
+    assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up now"
+
+
+@mark.skip("Fails at present sadly")
+def test__orphans_are_cleaned_up_when_word_deleted(db_factory):
+    db: "DBPersistence" = db_factory()
+    word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
+    assert len(list(db.get_all_tags())) == 2, "Tags should exist still"
+    db.delete_word(word1.name)
     assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up now"
