@@ -26,7 +26,7 @@ class DBPersistence:
         with self._get_session() as session:
             db_tags = self.resolve_tags(tags, session)
             word = Word(name=name, content=content, tags={})
-            word.tgs_ = db_tags
+            word.tag_objs = db_tags
             session.add(word)
             session.commit()
             word = session.scalar(select(Word).where(Word.name == name))

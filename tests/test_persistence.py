@@ -143,9 +143,16 @@ def test__add_two_words_with_the_same_tag_2(db_factory):
 
 
 def test__orphans_are_cleaned_up(db_factory):
+    from sqlalchemy import select
+
+    from wordspreader.ddl import Tag, Word
+
     db: "DBPersistence" = db_factory()
     word1 = make_get_check("word1", "", {"thing", "stuff"}, db)
     assert len(list(db.get_all_tags())) == 2, "Tags should exist still"
     db.delete_word(word1.name)
+    with db._get_session() as session:
+        for tag in session.execute(select(Tag)).scalars():
+            print(tag.words)
 
     assert len(list(db.get_all_tags())) == 0, "Tags should be cleaned up!"
