@@ -111,15 +111,6 @@ class WordSpreader(UserControl):
         self.word_display.update()
         super().update()
 
-    def db_word_to_flet_word(self, db_word: Word) -> Words:
-        return Words(
-            db_word.name,
-            db_word.content,
-            db_word.tags,
-            partial(self.db.update_word, db_word.name),
-            partial(self.db.delete_word, db_word.name),
-        )
-
     def new_word(self, title: str, words: str, tags: set[str] = None):
         self.db.new_word(title, words, tags)
         self.close_bs()
