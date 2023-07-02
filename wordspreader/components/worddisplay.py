@@ -1,4 +1,4 @@
-from functools import partial
+import logging
 
 from flet_core import (
     Column,
@@ -14,6 +14,8 @@ from wordspreader.persistence import DBPersistence
 
 # noinspection PyAttributeOutsideInit
 class WordDisplay(UserControl):
+    log = logging.getLogger("WordDisplay")
+
     def __init__(self, db: DBPersistence, edit_word: callable):
         super().__init__()
         self.db = db
@@ -70,18 +72,34 @@ class WordDisplay(UserControl):
 
     def _sort_keywords(self):
         self.keywords.tabs.sort(key=WordDisplay._keyword_key)
-        self.keywords.update()
 
     def update(self):
-        current_tags = {t.text for t in self.keywords.tabs}
-        all_tags_from_db = set(self.db.get_all_tags())
-        if _ := all_tags_from_db - current_tags:
+        self._update_tags()
+        self._update_words()
+        super().update()
+
+    def _update_tags(self) -> bool:
+        ui_tags = {t.text for t in self.keywords.tabs}
+        db_tags = set(self.db.get_all_tags())
+        # If either side has something the other side doesn't
+        if ui_tags.symmetric_difference(db_tags):
+            self.log.debug("Found a difference in tags, updating.")
+            old_key = self.keywords.tabs[self.keywords.selected_index].text
             self.keywords.tabs = self._build_keywords()
+            self._sort_keywords()
+            new_kws = [t.text for t in self.keywords.tabs]
+            self.keywords.selected_index = new_kws.index(old_key)
             self.keywords.update()
-        all_word_names_from_db = {w.name for w in self.db.get_words_filtered()}
-        current_word_names = {w.title for w in self.words.controls[1:]}
-        if _ := all_word_names_from_db - current_word_names:
+            return True
+        return False
+
+    def _update_words(self) -> bool:
+        ui_words = {w.title for w in self.words.controls}
+        db_words = {w.name for w in self.db.get_words_filtered()}
+        # If either side has something the other side doesn't
+        if ui_words.symmetric_difference(db_words):
+            self.log.debug("Found a difference in words, updating.")
             self.words.controls = self._build_all_words()
             self.words.update()
-        self._sort_keywords()
-        super().update()
+            return True
+        return False

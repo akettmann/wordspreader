@@ -58,6 +58,7 @@ class WordSpreader(UserControl):
                     on_click=self.show_db_file_in_file_browser,
                 ),
                 PopupMenuItem(text="Load Examples", on_click=self.load_examples),
+                PopupMenuItem(text="Wipe DB", on_click=self.wipe_db),
             ],
             tooltip="Show options",
         )
@@ -137,16 +138,24 @@ class WordSpreader(UserControl):
                 case {"title": title, "words": words, "tags": tags}:
                     # Using a bare except because we should only be eating SQLalchemy unique errors
                     # noinspection PyPep8
-                    try:
-                        self.new_word(title, words, set(tags))
-                    except:
-                        pass
+                    self.db.new_word(title, words, set(tags))
+        self.update()
+
+    def wipe_db(self, _):
+        from wordspreader.ddl import Base
+
+        Base.metadata.drop_all(self.db.engine)
+        Base.metadata.create_all(self.db.engine)
+        self.update()
 
 
 _db = WordSpreader.default_app_dir_db()
 
 
 def main(page: Page):
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(asctime)s %(name)s [%(levelname)s]:%(message)s"
+    )
     page.title = "Word Spreader"
     page.horizontal_alignment = "center"
     page.scroll = "adaptive"
