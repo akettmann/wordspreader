@@ -38,6 +38,19 @@ class WordSpreader(UserControl):
         self.word_modal.setup_edit_word(word)
         self.open_bs()
 
+    def setup_delete_word(self, word: Words):
+        self.alert_dialog.open = True
+        self.alert_dialog.content = word
+        self.alert_dialog.update()
+        self.alert_dialog.actions[0].on_click = lambda _: self.delete_word_and_cleanup(word)
+        self.page.update()
+
+    def delete_word_and_cleanup(self, word: Words):
+        self.db.delete_word(word.title)
+        self.word_display.update()
+        self.alert_dialog.open = False
+        self.alert_dialog.update()
+
     def word_entry_edit_word(self, *args, **kwargs):
         self.db.update_word(*args, **kwargs)
         self.word_display.update()
