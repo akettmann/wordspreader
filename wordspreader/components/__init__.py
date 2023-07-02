@@ -30,21 +30,6 @@ class Words(UserControl):
         self._tags = sorted(tags)
         self.edit_me = edit_me
         self.delete_me = delete_me
-
-    @property
-    def words(self):
-        return self._words
-
-    @property
-    def title(self):
-        return self._title
-
-    @property
-    def tags(self) -> list[str]:
-        return sorted(self._tags)
-
-    # noinspection PyAttributeOutsideInit
-    def build(self):
         self.copy_icon = IconButton(
             icon=icons.COPY_SHARP,
             icon_size=35,
@@ -68,7 +53,7 @@ class Words(UserControl):
         self.popup_menu = PopupMenuButton(
             items=[
                 PopupMenuItem(text="Edit", on_click=lambda _: self.edit_me(self)),
-                PopupMenuItem(text="Delete", on_click=self.delete_clicked),
+                PopupMenuItem(text="Delete", on_click=lambda _: self.delete_me(self)),
             ],
         )
         self.list_tile = ListTile(
@@ -78,6 +63,19 @@ class Words(UserControl):
             trailing=self.popup_menu,
         )
 
+    @property
+    def words(self):
+        return self._words
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def tags(self) -> list[str]:
+        return sorted(self._tags)
+
+    def build(self):
         return self.list_tile
 
     def delete_clicked(self, _):
