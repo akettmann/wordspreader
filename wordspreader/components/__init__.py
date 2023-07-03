@@ -44,12 +44,7 @@ class Words(UserControl):
         )
         self.words_text = Text(value=self._words, max_lines=1)
         self.title_text = Text(value=self._title)
-        self.tag_text = Text(
-            value=", ".join(self.tags),
-            style=TextThemeStyle.BODY_MEDIUM,
-            italic=True,
-            weight=FontWeight.BOLD,
-        )
+        self.tag_text = self.make_tag_text()
         self.popup_menu = PopupMenuButton(
             items=[
                 PopupMenuItem(text="Edit", on_click=lambda _: self.edit_me(self)),
@@ -61,6 +56,14 @@ class Words(UserControl):
             title=Row([self.title_text, self.tag_text]),
             subtitle=self.words_text,
             trailing=self.popup_menu,
+        )
+
+    def make_tag_text(self):
+        return Text(
+            value=", ".join(self.tags),
+            style=TextThemeStyle.BODY_MEDIUM,
+            italic=True,
+            weight=FontWeight.BOLD,
         )
 
     @property

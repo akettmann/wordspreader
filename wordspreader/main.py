@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 from pathlib import Path
 
 import appdirs
@@ -13,10 +12,12 @@ from flet import (
 )
 from flet.utils import open_in_browser
 from flet_core import (
+    AlertDialog,
     BottomSheet,
     FloatingActionButton,
     PopupMenuButton,
     PopupMenuItem,
+    TextButton,
     TextThemeStyle,
     colors,
     icons,
@@ -28,7 +29,6 @@ from flet_core.types import (
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
 from wordspreader.components.wordentry import WordModal
-from wordspreader.ddl import Word
 from wordspreader.persistence import DBPersistence
 
 
@@ -39,17 +39,26 @@ class WordSpreader(UserControl):
         self.open_bs()
 
     def setup_delete_word(self, word: Words):
+        self._to_delete = word
         self.alert_dialog.open = True
-        self.alert_dialog.content = word
+        self.alert_dialog.content = Column(
+            [
+                Text(value=word.title),
+                Text(value=word.words),
+                word.make_tag_text(),
+            ],
+            tight=True,
+        )
         self.alert_dialog.update()
-        self.alert_dialog.actions[0].on_click = lambda _: self.delete_word_and_cleanup(word)
         self.page.update()
 
-    def delete_word_and_cleanup(self, word: Words):
-        self.db.delete_word(word.title)
+    def delete_word_and_cleanup(self, _=None):
+        try:
+            self.db.delete_word(self._to_delete.title)
+        finally:
+            self._to_delete = None
         self.word_display.update()
-        self.alert_dialog.open = False
-        self.alert_dialog.update()
+        self.close_alert_dialog()
 
     def word_entry_edit_word(self, *args, **kwargs):
         self.db.update_word(*args, **kwargs)
@@ -60,7 +69,7 @@ class WordSpreader(UserControl):
         super().__init__()
 
         self.db = db
-        self.word_display = WordDisplay(self.db, self.setup_edit_word)
+        self.word_display = WordDisplay(self.db, self.setup_edit_word, self.setup_delete_word)
         self.word_modal = WordModal(self.new_word, self.word_entry_edit_word)
         self.bs = BottomSheet(self.word_modal)
         self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.open_bs)
@@ -75,6 +84,14 @@ class WordSpreader(UserControl):
             ],
             tooltip="Show options",
         )
+        self.alert_dialog = AlertDialog(
+            title=Text("Are you sure you wish to delete this?"),
+            actions=[
+                TextButton("Yes", on_click=self.delete_word_and_cleanup),
+                TextButton("No", on_click=self.close_alert_dialog),
+            ],
+        )
+        self._to_delete: Words | None = None
 
     def open_bs(self, _=None):
         self.bs.open = True
@@ -83,6 +100,14 @@ class WordSpreader(UserControl):
     def close_bs(self, _=None):
         self.bs.open = False
         self.bs.update()
+
+    def open_alert_dialog(self):
+        self.alert_dialog.open = True
+        self.alert_dialog.update()
+
+    def close_alert_dialog(self, _=None):
+        self.alert_dialog.open = False
+        self.alert_dialog.update()
 
     @classmethod
     def default_app_dir_db(cls):
@@ -96,7 +121,8 @@ class WordSpreader(UserControl):
     def did_mount(self):
         self.page.floating_action_button = self.fab
         self.page.overlay.append(self.bs)
-        self.page.add(self.fab)
+        self.page.dialog = self.alert_dialog
+        self.page.add(self.fab, self.alert_dialog)
 
     # noinspection PyPropertyDefinition
     @classmethod

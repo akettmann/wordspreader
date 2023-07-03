@@ -16,21 +16,17 @@ from wordspreader.persistence import DBPersistence
 class WordDisplay(UserControl):
     log = logging.getLogger("WordDisplay")
 
-    def __init__(self, db: DBPersistence, edit_word: callable):
+    def __init__(self, db: DBPersistence, edit_word: callable, delete_word: callable):
         super().__init__()
         self.db = db
-        self.edit_word = edit_word
+        self._edit_callback = edit_word
+        self._delete_callback = delete_word
 
     def build(self):
         self.keywords = Tabs(on_change=self.filter_changed, tabs=self._build_keywords())
         self.words = Column(controls=self._build_all_words())
 
         return Column([self.keywords, self.words])
-
-    def delete_words(self, words: Words):
-        self.db.delete_word(words.title)
-        self.words.controls.remove(words)
-        self.update()
 
     def filter_changed(self, _: ControlEvent):
         self._set_visibility_for_filter()
@@ -56,8 +52,8 @@ class WordDisplay(UserControl):
                 word.name,
                 word.content,
                 word.tags,
-                self.edit_word,
-                self.delete_words,
+                self._edit_callback,
+                self._delete_callback,
             )
             for word in self.db.get_words_filtered()
         ]
