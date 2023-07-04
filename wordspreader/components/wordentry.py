@@ -63,7 +63,13 @@ class WordModal(ft.UserControl):
 
     def make_tag_obj(self, name: str):
         return Container(
-            Stack([Text(name), IconButton(icon=icons.DELETE, on_click=self.delete_tag)])
+            Row(
+                [
+                    Text(name),
+                    IconButton(icon=icons.DELETE, on_click=self.delete_tag, icon_color="red"),
+                ]
+            ),
+            padding=10,
         )
 
     def save(self, _):

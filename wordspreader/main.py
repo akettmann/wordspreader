@@ -195,4 +195,10 @@ def main(page: Page):
     page.add(app)
 
 
-flet.app(target=main)
+def test_main(page: Page):
+    app = WordSpreader(_db)
+    page.add(app)
+    app.setup_edit_word(app.word_display.words.controls[0])
+
+
+flet.app(target=test_main)
