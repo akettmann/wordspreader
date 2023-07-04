@@ -4,11 +4,14 @@ import flet as ft
 from flet_core import (
     Column,
     Container,
+    ControlEvent,
     CrossAxisAlignment,
     FloatingActionButton,
+    IconButton,
     MainAxisAlignment,
     ResponsiveRow,
     Row,
+    Stack,
     Text,
     TextField,
     TextThemeStyle,
@@ -37,6 +40,7 @@ class WordModal(ft.UserControl):
         self.update()
 
     def add_word(self):
+        """Creates the word and resets the form"""
         title = self._title.value.strip()
         words = self._words.value.strip()
         if title and words:
@@ -44,14 +48,23 @@ class WordModal(ft.UserControl):
         self._reset()
 
     def add_tag(self, _):
+        """Handles the submit on the tag field, clears the field and adds the tag to the list of tags"""
         tag = self._tags.value.strip()
         if tag not in self.tags_set and tag:
-            self._tag_display.controls.append(Text(tag))
+            self._tag_display.controls.append(self.make_tag_obj(tag))
             self._tag_display.update()
             self.tags_set.add(tag)
         self._tags.value = ""
         self._tags.focus()
         self._tags.update()
+
+    def delete_tag(self, e: ControlEvent):
+        print("delete_tag called")
+
+    def make_tag_obj(self, name: str):
+        return Container(
+            Stack([Text(name), IconButton(icon=icons.DELETE, on_click=self.delete_tag)])
+        )
 
     def save(self, _):
         match self._mode:
@@ -96,7 +109,7 @@ class WordModal(ft.UserControl):
     def setup_edit_word(self, word: Words):
         self._title.value = self.orig_key = word.title
         self._words.value = word.words
-        self._tag_display.controls = [Text(t) for t in word.tags]
+        self._tag_display.controls = [self.make_tag_obj(t) for t in word.tags]
         self.tags_set = set(word.tags)
         self.mode = "edit"
         self.update()
