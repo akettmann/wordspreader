@@ -2,6 +2,7 @@ from typing import Literal
 
 import flet as ft
 from flet_core import (
+    ButtonStyle,
     Column,
     Container,
     ControlEvent,
@@ -13,6 +14,7 @@ from flet_core import (
     Row,
     Stack,
     Text,
+    TextButton,
     TextField,
     TextThemeStyle,
     icons,
@@ -62,15 +64,7 @@ class WordModal(ft.UserControl):
         print("delete_tag called")
 
     def make_tag_obj(self, name: str):
-        return Container(
-            Row(
-                [
-                    Text(name),
-                    IconButton(icon=icons.DELETE, on_click=self.delete_tag, icon_color="red"),
-                ]
-            ),
-            padding=10,
-        )
+        return TextButton(name, icon=icons.DELETE, icon_color="red", expand=False)
 
     def save(self, _):
         match self._mode:
@@ -89,24 +83,15 @@ class WordModal(ft.UserControl):
             on_submit=self.add_tag,
         )
         self.tags_set = set()
-        self._tag_display = ResponsiveRow()
-        self._fab = FloatingActionButton(icon=icons.ADD, on_click=self.save)
+        self._tag_display = ResponsiveRow(alignment=MainAxisAlignment.START)
+        self._fab = FloatingActionButton(
+            icon=icons.ADD, on_click=self.save, tooltip="Add the word."
+        )
         self.column = Column(
-            [
-                self._header,
-                self._title,
-                self._words,
-                self._tags,
-                self._tag_display,
-                Row(
-                    [
-                        self._fab,
-                    ],
-                    alignment=MainAxisAlignment.END,
-                ),
-            ],
+            [self._header, self._title, self._words, self._tags, self._tag_display, self._fab],
             expand=True,
             horizontal_alignment=CrossAxisAlignment.CENTER,
+            tight=True,
         )
         self.container = Container(self.column)
 
