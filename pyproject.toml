@@ -48,6 +48,7 @@ dependencies = [
   "pyyaml",
   "rich",
   "psycopg2",
+  "PyInstaller"
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
