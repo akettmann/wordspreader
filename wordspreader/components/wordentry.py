@@ -61,10 +61,15 @@ class WordModal(ft.UserControl):
         self._tags.update()
 
     def delete_tag(self, e: ControlEvent):
-        print("delete_tag called")
+        tag = e.control.text
+        self.tags_set.remove(tag)
+        self._tag_display.controls.remove(e.control)
+        self._tag_display.update()
 
     def make_tag_obj(self, name: str):
-        return TextButton(name, icon=icons.DELETE, icon_color="red", expand=False)
+        return TextButton(
+            name, icon=icons.DELETE, icon_color="red", expand=False, on_click=self.delete_tag
+        )
 
     def save(self, _):
         match self._mode:

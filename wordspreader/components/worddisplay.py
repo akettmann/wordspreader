@@ -9,6 +9,7 @@ from flet_core import (
 )
 
 from wordspreader.components import Words
+from wordspreader.ddl import Word
 from wordspreader.persistence import DBPersistence
 
 
@@ -83,19 +84,33 @@ class WordDisplay(UserControl):
             old_key = self.keywords.tabs[self.keywords.selected_index].text
             self.keywords.tabs = self._build_keywords()
             self._sort_keywords()
-            new_kws = [t.text for t in self.keywords.tabs]
-            self.keywords.selected_index = new_kws.index(old_key)
+            new_kws = {t.text for t in self.keywords.tabs}
+            if old_key in new_kws:
+                self.keywords.selected_index = self.keywords.tabs.index(old_key)
+            else:
+                # If we don't have that keyword anymore, we are going to just go to All
+                self.keywords.selected_index = 0
             self.keywords.update()
             return True
         return False
 
     def _update_words(self) -> bool:
+        # Do we have all of the keywords and words that exist?
         ui_words = {w.title for w in self.words.controls}
-        db_words = {w.name for w in self.db.get_words_filtered()}
+        db_words = {w.name: w for w in self.db.get_words_filtered()}
         # If either side has something the other side doesn't
-        if ui_words.symmetric_difference(db_words):
-            self.log.debug("Found a difference in words, updating.")
+        if ui_words.symmetric_difference(db_words.keys()):
+            self.log.debug("Found an obvious difference in words, updating.")
             self.words.controls = self._build_all_words()
             self.words.update()
             return True
+        # Are our instances up to date?
+        for word_control in self.words.controls:
+            db_word: Word = db_words[word_control.title]
+            wc: Words
+            if wc.words != db_word.content:
+                wc.words = db_word.content
+            if set(wc.tags) != db_word.tags:
+                wc.tags = db_word.tags
+
         return False
