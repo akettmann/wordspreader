@@ -80,7 +80,8 @@ class WordSpreader(UserControl):
                     on_click=self.show_db_file_in_file_browser,
                 ),
                 PopupMenuItem(text="Load Examples", on_click=self.load_examples),
-                PopupMenuItem(text="Wipe DB", on_click=self.wipe_db),
+                # Debug option, not intended to be available normally
+                # PopupMenuItem(text="Wipe DB", on_click=self.wipe_db),
             ],
             tooltip="Show options",
         )
@@ -195,10 +196,4 @@ def main(page: Page):
     page.add(app)
 
 
-def test_main(page: Page):
-    app = WordSpreader(_db)
-    page.add(app)
-    app.setup_edit_word(app.word_display.words.controls[0])
-
-
-flet.app(target=test_main)
+flet.app(target=main)
