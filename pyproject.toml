@@ -91,7 +91,10 @@ all = [
   "style",
   "typing",
 ]
-
+[tool.hatch.envs.build]
+extra-dependencies = ['PyInstaller']
+dev-mode=false
+scripts.build = 'flet pack -vv -n wordspreader wordspreader/main.py'
 [tool.black]
 target-version = ["py311"]
 line-length = 100
