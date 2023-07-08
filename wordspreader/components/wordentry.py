@@ -2,17 +2,13 @@ from typing import Literal
 
 import flet as ft
 from flet_core import (
-    ButtonStyle,
     Column,
     Container,
     ControlEvent,
     CrossAxisAlignment,
     FloatingActionButton,
-    IconButton,
     MainAxisAlignment,
     ResponsiveRow,
-    Row,
-    Stack,
     Text,
     TextButton,
     TextField,
@@ -54,11 +50,9 @@ class WordModal(ft.UserControl):
         tag = self._tags.value.strip()
         if tag not in self.tags_set and tag:
             self._tag_display.controls.append(self.make_tag_obj(tag))
-            self._tag_display.update()
             self.tags_set.add(tag)
         self._tags.value = ""
         self._tags.focus()
-        self._tags.update()
         self.update()
 
     def delete_tag(self, e: ControlEvent):
