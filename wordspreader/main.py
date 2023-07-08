@@ -10,7 +10,6 @@ from flet import (
     Text,
     UserControl,
 )
-from flet.utils import open_in_browser
 from flet_core import (
     AlertDialog,
     BottomSheet,
@@ -25,6 +24,7 @@ from flet_core import (
 from flet_core.types import (
     MainAxisAlignment,
 )
+from flet_runtime.utils import open_in_browser
 
 from wordspreader.components import Words
 from wordspreader.components.worddisplay import WordDisplay
