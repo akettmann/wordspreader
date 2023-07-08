@@ -12,7 +12,6 @@ from flet import (
 )
 from flet_core import (
     AlertDialog,
-    BottomSheet,
     FloatingActionButton,
     PopupMenuButton,
     PopupMenuItem,
@@ -35,7 +34,7 @@ from wordspreader.persistence import DBPersistence
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
     def setup_edit_word(self, word: Words):
-        self.word_modal.setup_edit_word(word)
+        self.bs.setup_edit_word(word)
         self.open_bs()
 
     def setup_delete_word(self, word: Words):
@@ -70,8 +69,7 @@ class WordSpreader(UserControl):
 
         self.db = db
         self.word_display = WordDisplay(self.db, self.setup_edit_word, self.setup_delete_word)
-        self.word_modal = WordModal(self.new_word, self.word_entry_edit_word)
-        self.bs = BottomSheet(self.word_modal)
+        self.bs = WordModal(self.new_word, self.word_entry_edit_word)
         self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.open_bs)
         self.popup = PopupMenuButton(
             items=[
@@ -167,7 +165,7 @@ class WordSpreader(UserControl):
         for word in data.get("words"):
             match word:
                 case {"title": title, "words": words, "tags": tags}:
-                    # Using a bare except because we should only be eating SQLalchemy unique errors
+                    # Using a bare except because we should only be eating SQLAlchemy unique errors
                     # noinspection PyPep8
                     self.db.new_word(title, words, set(tags))
         self.update()
@@ -195,5 +193,7 @@ def main(page: Page):
     # add application's root control to the page
     page.add(app)
 
+
+import rich.traceback as tb
 
 flet.app(target=main)

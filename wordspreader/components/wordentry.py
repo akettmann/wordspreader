@@ -1,3 +1,4 @@
+import logging
 from typing import Literal
 
 import flet as ft
@@ -22,13 +23,36 @@ MODE_TYPE = Literal["edit", "new"]
 
 
 # noinspection PyAttributeOutsideInit
-class WordModal(ft.UserControl):
+class WordModal(ft.BottomSheet):
     def __init__(self, new_word: callable, edit_word: callable):
         super().__init__()
         self.new_word = new_word
         self.edit_word = edit_word
         self._mode: MODE_TYPE = "new"
         self.orig_key: str | None = None
+        self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
+        self._title = TextField(label="Title")
+        self._words = TextField(label="Content", multiline=True, min_lines=3)
+        self._tags = TextField(
+            label="Keywords",
+            helper_text="Press Enter to submit a keyword to the list",
+            on_submit=self.add_tag,
+        )
+        self.tags_set = set()
+        self._tag_display = ResponsiveRow(
+            alignment=MainAxisAlignment.START, vertical_alignment=CrossAxisAlignment.START
+        )
+        self._fab = FloatingActionButton(
+            icon=icons.ADD, on_click=self.save, tooltip="Add the word."
+        )
+        self.column = Column(
+            [self._header, self._title, self._words, self._tags, self._tag_display, self._fab],
+            expand=True,
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+            tight=True,
+        )
+        self.container = Container(self.column)
+        super().__init__(content=self.container)
 
     def _reset(self):
         self._title.value = ""
@@ -74,28 +98,7 @@ class WordModal(ft.UserControl):
                 self.save_edited_word()
 
     def build(self):
-        self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
-        self._title = TextField(label="Title")
-        self._words = TextField(label="Content", multiline=True, min_lines=3)
-        self._tags = TextField(
-            label="Keywords",
-            helper_text="Press Enter to submit a keyword to the list",
-            on_submit=self.add_tag,
-        )
-        self.tags_set = set()
-        self._tag_display = ResponsiveRow(alignment=MainAxisAlignment.START)
-        self._fab = FloatingActionButton(
-            icon=icons.ADD, on_click=self.save, tooltip="Add the word."
-        )
-        self.column = Column(
-            [self._header, self._title, self._words, self._tags, self._tag_display, self._fab],
-            expand=True,
-            horizontal_alignment=CrossAxisAlignment.CENTER,
-            tight=True,
-        )
-        self.container = Container(self.column)
-        self.controls.append(self.container)
-        return self.container
+        return self
 
     def setup_edit_word(self, word: Words):
         self._title.value = self.orig_key = word.title
