@@ -94,7 +94,7 @@ class WordModal(ft.UserControl):
             tight=True,
         )
         self.container = Container(self.column)
-
+        self.controls.append(self.container)
         return self.container
 
     def setup_edit_word(self, word: Words):
