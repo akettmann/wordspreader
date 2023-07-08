@@ -86,7 +86,7 @@ class WordDisplay(UserControl):
             self._sort_keywords()
             new_kws = {t.text for t in self.keywords.tabs}
             if old_key in new_kws:
-                self.keywords.selected_index = self.keywords.tabs.index(old_key)
+                self.keywords.selected_index = list(new_kws).index(old_key)
             else:
                 # If we don't have that keyword anymore, we are going to just go to All
                 self.keywords.selected_index = 0
@@ -96,10 +96,10 @@ class WordDisplay(UserControl):
 
     def _update_words(self) -> bool:
         # Do we have all of the keywords and words that exist?
-        ui_words = {w.title for w in self.words.controls}
+        ui_words = {w.title: w for w in self.words.controls}
         db_words = {w.name: w for w in self.db.get_words_filtered()}
         # If either side has something the other side doesn't
-        if ui_words.symmetric_difference(db_words.keys()):
+        if set(ui_words.keys()).symmetric_difference(db_words.keys()):
             self.log.debug("Found an obvious difference in words, updating.")
             self.words.controls = self._build_all_words()
             self.words.update()
@@ -107,7 +107,7 @@ class WordDisplay(UserControl):
         # Are our instances up to date?
         for word_control in self.words.controls:
             db_word: Word = db_words[word_control.title]
-            wc: Words
+            wc: Words = word_control
             if wc.words != db_word.content:
                 wc.words = db_word.content
             if set(wc.tags) != db_word.tags:
