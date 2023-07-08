@@ -59,6 +59,7 @@ class WordModal(ft.UserControl):
         self._tags.value = ""
         self._tags.focus()
         self._tags.update()
+        self.update()
 
     def delete_tag(self, e: ControlEvent):
         tag = e.control.text
