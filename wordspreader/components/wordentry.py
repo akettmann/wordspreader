@@ -107,7 +107,7 @@ class WordModal(ft.UserControl):
 
     def save_edited_word(self):
         # If the names are the same, it should send None
-        new_name = None if self.orig_key == (n := self._title.value.strip()) else n
+        new_name = None if self.orig_key == (name := self._title.value.strip()) else name
         self.edit_word(self.orig_key, self._words.value.strip(), self.tags_set, new_name)
         self._reset()
 
