@@ -72,7 +72,9 @@ class WordModal(ft.BottomSheet):
     def add_tag(self, _):
         """Handles the submit on the tag field, clears the field and adds the tag to the list of tags"""
         tag = self._tags.value.strip()
+        logging.debug(f"Got tag named `{tag}`")
         if tag not in self.tags_set and tag:
+            logging.debug(f"tag `{tag}` is new and not empty")
             self._tag_display.controls.append(self.make_tag_obj(tag))
             self.tags_set.add(tag)
         self._tags.value = ""
@@ -86,6 +88,7 @@ class WordModal(ft.BottomSheet):
         self._tag_display.update()
 
     def make_tag_obj(self, name: str):
+        logging.debug(f"Creating textbutton for {self.title}")
         return TextButton(
             name, icon=icons.DELETE, icon_color="red", expand=False, on_click=self.delete_tag
         )
