@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable
 from typing import Literal
 
 import flet as ft
@@ -19,6 +20,7 @@ from flet_core import (
 
 from wordspreader.components import Words
 
+log = logging.getLogger(__name__)
 MODE_TYPE = Literal["edit", "new"]
 
 
@@ -29,6 +31,7 @@ class WordModal(ft.BottomSheet):
         self.new_word = new_word
         self.edit_word = edit_word
         self._mode: MODE_TYPE = "new"
+        self._editing: Words | None
         self.orig_key: str | None = None
         self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
         self._title = TextField(label="Title")
@@ -38,7 +41,7 @@ class WordModal(ft.BottomSheet):
             helper_text="Press Enter to submit a keyword to the list",
             on_submit=self.add_tag,
         )
-        self.tags_set = set()
+        self._tags_set = set()
         self._tag_display = ResponsiveRow(
             alignment=MainAxisAlignment.START, vertical_alignment=CrossAxisAlignment.START
         )
@@ -55,39 +58,32 @@ class WordModal(ft.BottomSheet):
         super().__init__(content=self.container)
 
     def _reset(self):
-        self._title.value = ""
-        self._words.value = ""
-        self._tags.value = ""
-        self.tags_set = set()
-        self.update()
+        del self.words
 
     def add_word(self):
         """Creates the word and resets the form"""
         title = self._title.value.strip()
         words = self._words.value.strip()
         if title and words:
-            self.new_word(title=title, words=words, tags=self.tags_set)
+            self.new_word(title=title, words=words, tags=self._tags_set)
         self._reset()
 
     def add_tag(self, _):
         """Handles the submit on the tag field, clears the field and adds the tag to the list of tags"""
         tag = self._tags.value.strip()
         logging.debug(f"Got tag named `{tag}`")
-        if tag not in self.tags_set and tag:
+        if tag not in self._tags_set and tag:
             logging.debug(f"tag `{tag}` is new and not empty")
-            self._tag_display.controls.append(self.make_tag_obj(tag))
-            self.tags_set.add(tag)
+            self._tag_display.controls.append(self._make_tag_obj(tag))
+            self._tags_set.add(tag)
         self._tags.value = ""
         self._tags.focus()
         self.update()
 
     def delete_tag(self, e: ControlEvent):
-        tag = e.control.text
-        self.tags_set.remove(tag)
-        self._tag_display.controls.remove(e.control)
-        self._tag_display.update()
+        self.tags = self.tags.remove(e.control.text)
 
-    def make_tag_obj(self, name: str):
+    def _make_tag_obj(self, name: str):
         logging.debug(f"Creating textbutton for {self.title}")
         return TextButton(
             name, icon=icons.DELETE, icon_color="red", expand=False, on_click=self.delete_tag
@@ -104,17 +100,23 @@ class WordModal(ft.BottomSheet):
         return self
 
     def setup_edit_word(self, word: Words):
-        self._title.value = self.orig_key = word.title
-        self._words.value = word.words
-        self._tag_display.controls = [self.make_tag_obj(t) for t in word.tags]
-        self.tags_set = set(word.tags)
+        self._editing = word
+        self.title = word.title
+        self.words = word.words
+        self.tags = word.tags
         self.mode = "edit"
         self.update()
 
     def save_edited_word(self):
         # If the names are the same, it should send None
+        log.debug("Saving changes to word `%s`", self._editing.title)
         new_name = None if self.orig_key == (name := self._title.value.strip()) else name
-        self.edit_word(self.orig_key, self._words.value.strip(), self.tags_set, new_name)
+        if new_name:
+            log.debug("Updating name of word from `%s` to `%s`", self._editing.title, new_name)
+        self.edit_word(self._editing.title, self.words, self.tags, new_name)
+        self._editing.title = self.title
+        self._editing.words = self.words
+        self._editing.tags = self.tags
         self._reset()
 
     @property
@@ -123,23 +125,52 @@ class WordModal(ft.BottomSheet):
 
     @title.setter
     def title(self, value):
-        self._title.value = value
+        if self._title.value != value:
+            log.debug("Updating words from `%s` to `%s`", self._title.value, value)
+            self._title.value = value
+            self._title.update()
+        else:
+            log.debug("Skipping updating title as the new value evaluated equal")
+
+    @title.deleter
+    def title(self):
+        self.title = ""
 
     @property
     def words(self):
         return self._words.value
 
     @words.setter
-    def words(self, value):
-        self._words.value = value
+    def words(self, value: str):
+        if self._words.value != value:
+            log.debug("Updating words from `%s` to `%s`", self._words.value, value)
+            self._words.value = value
+            self._words.update()
+        else:
+            log.debug("Skipping updating words as the new value evaluated equal")
+
+    @words.deleter
+    def words(self):
+        self.words = ""
 
     @property
-    def tags(self):
-        return self._tags.value
+    def tags(self) -> list[str]:
+        return sorted(self._tags_set)
 
     @tags.setter
-    def tags(self, value):
-        self._tags.value = value
+    def tags(self, value: Iterable[str]):
+        new_tags = set(value)
+        if new_tags != self._tags_set:
+            log.debug("Updating words from `%s` to `%s`", self._tags_set, new_tags)
+            self._tags_set = new_tags
+            self._tag_display.controls = [self._make_tag_obj(t) for t in self._tags_set]
+            self._tag_display.update()
+        else:
+            log.debug("Skipping updating tags as the new value evaluated equal")
+
+    @tags.deleter
+    def tags(self):
+        self.tags = set()
 
     @property
     def mode(self) -> MODE_TYPE:
