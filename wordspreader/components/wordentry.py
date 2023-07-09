@@ -112,7 +112,7 @@ class WordModal(ft.BottomSheet):
 
     def setup_edit_word(self, word: Words):
         self.open = True
-        if self._editing != word:
+        if self.title != word.title:
             # If we are trying to edit a new word, than we last edited, replace everything with the word's content
             log.debug("Setting up the fields from the word `%s`", word.title)
             self._editing = word
