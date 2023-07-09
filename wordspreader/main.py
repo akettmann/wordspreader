@@ -184,9 +184,6 @@ _db = WordSpreader.default_app_dir_db()
 
 
 def main(page: Page):
-    logging.basicConfig(
-        level=logging.DEBUG, format="%(asctime)s %(name)s [%(levelname)s]:%(message)s"
-    )
     page.title = "Word Spreader"
     page.horizontal_alignment = "center"
     page.scroll = "adaptive"
