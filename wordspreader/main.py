@@ -31,7 +31,6 @@ from wordspreader.components.wordentry import WordModal
 from wordspreader.persistence import DBPersistence
 
 log = logging.getLogger(__name__)
-log.addHandler(logging.NullHandler())
 
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
