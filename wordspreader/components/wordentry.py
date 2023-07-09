@@ -125,7 +125,7 @@ class WordModal(ft.BottomSheet):
     @title.setter
     def title(self, value):
         if self._title.value != value:
-            log.debug("Updating words from `%s` to `%s`", self._title.value, value)
+            log.debug("Updating title from `%s` to `%s`", self._title.value, value)
             self._title.value = value
             self.container.update()
         else:
@@ -160,7 +160,7 @@ class WordModal(ft.BottomSheet):
     def tags(self, value: Iterable[str]):
         new_tags = value if isinstance(value, set) else set(value)
         if new_tags != self._tags_set:
-            log.debug("Updating words from `%s` to `%s`", self._tags_set, new_tags)
+            log.debug("Updating tags from `%s` to `%s`", self._tags_set, new_tags)
             self._tags_set = new_tags
             self._tag_display.controls = [self._make_tag_obj(t) for t in sorted(self.tags)]
             self.container.update()
