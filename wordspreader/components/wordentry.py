@@ -33,6 +33,7 @@ class WordModal(ft.BottomSheet):
         self._mode: MODE_TYPE = "new"
         self._editing: Words | None = None
         self.orig_key: str | None = None
+        # TODO: Add a button to revert changes when we are editing?
         self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
         self._title = TextField(label="Title")
         self._words = TextField(label="Content", multiline=True, min_lines=3)
@@ -58,7 +59,11 @@ class WordModal(ft.BottomSheet):
         super().__init__(content=self.container)
 
     def _reset(self):
+        log.debug("Reset called, clearing fields")
+        self._editing = None
+        del self.title
         del self.words
+        del self.tags
 
     def add_word(self):
         """Creates the word and resets the form"""
@@ -86,7 +91,7 @@ class WordModal(ft.BottomSheet):
         self.tags = new_tags
 
     def _make_tag_obj(self, name: str):
-        logging.debug(f"Creating textbutton for {self.title}")
+        logging.debug(f"Creating `TextButton` for `{self.title}`")
         return TextButton(
             name, icon=icons.DELETE, icon_color="red", expand=False, on_click=self.delete_tag
         )
@@ -101,12 +106,21 @@ class WordModal(ft.BottomSheet):
     def build(self):
         return self
 
+    def setup_new_word(self, _=None):
+        self.open = True
+        self._reset()
+        self.mode = "new"
+
     def setup_edit_word(self, word: Words):
-        self._editing = word
-        self.title = word.title
-        self.words = word.words
-        self.tags = word.tags
-        self.mode = "edit"
+        self.open = True
+        if self._editing != word:
+            # If we are trying to edit a new word, than we last edited, replace everything with the word's content
+            self._editing = word
+            self.mode = "edit"
+            self.title = word.title
+            self.words = word.words
+            self.tags = word.tags
+        # If we are editing the same word again, we will leave it as it was
         self.update()
 
     def save_edited_word(self):
@@ -117,6 +131,8 @@ class WordModal(ft.BottomSheet):
         self._editing.words = self.words
         self._editing.tags = self.tags
         self._reset()
+        self.open = False
+        self.update()
 
     @property
     def title(self):

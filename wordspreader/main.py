@@ -37,7 +37,6 @@ log = logging.getLogger(__name__)
 class WordSpreader(UserControl):
     def setup_edit_word(self, word: Words):
         self.bs.setup_edit_word(word)
-        self.open_bs()
 
     def setup_delete_word(self, word: Words):
         self._to_delete = word
@@ -61,17 +60,15 @@ class WordSpreader(UserControl):
         self.word_display.update()
         self.close_alert_dialog()
 
-    def word_entry_edit_word(self, *args, **kwargs):
-        self.db.update_word(*args, **kwargs)
-        self.close_bs()
-
     def __init__(self, db: DBPersistence):
         super().__init__()
 
         self.db = db
         self.word_display = WordDisplay(self.db, self.setup_edit_word, self.setup_delete_word)
-        self.bs = WordModal(self.new_word, self.word_entry_edit_word)
-        self.fab = FloatingActionButton(icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.open_bs)
+        self.bs = WordModal(self.new_word, self.db.update_word)
+        self.fab = FloatingActionButton(
+            icon=icons.ADD, bgcolor=colors.BLUE, on_click=self.bs.setup_new_word
+        )
         self.popup = PopupMenuButton(
             items=[
                 PopupMenuItem(
@@ -92,10 +89,6 @@ class WordSpreader(UserControl):
             ],
         )
         self._to_delete: Words | None = None
-
-    def open_bs(self, _=None):
-        self.bs.open = True
-        self.bs.update()
 
     def close_bs(self, _=None):
         self.bs.open = False
