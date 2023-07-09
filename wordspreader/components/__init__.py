@@ -90,7 +90,7 @@ class Words(UserControl):
     @property
     def tags(self) -> set[str]:
         """Tag words or topics"""
-        return self._tags
+        return self._tags.copy()
 
     @tags.setter
     def tags(self, value: Iterable[str]):

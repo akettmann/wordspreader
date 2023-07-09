@@ -82,7 +82,7 @@ class WordModal(ft.BottomSheet):
 
     def delete_tag(self, e: ControlEvent):
         new_tags = self.tags
-        new_tags.remove(e.control.text.strip())
+        new_tags.remove(e.control.text)
         self.tags = new_tags
 
     def _make_tag_obj(self, name: str):
@@ -154,7 +154,7 @@ class WordModal(ft.BottomSheet):
 
     @property
     def tags(self) -> set[str]:
-        return self._tags_set
+        return self._tags_set.copy()
 
     @tags.setter
     def tags(self, value: Iterable[str]):
