@@ -29,7 +29,7 @@ class Words(UserControl):
         self, title: str, words: str, tags: Iterable[str], edit_me: callable, delete_me: callable
     ):
         super().__init__()
-        self._tags = tags
+        self._tags = tags if isinstance(tags, set) else set(tags)
         self.edit_me = edit_me
         self.delete_me = delete_me
         self.copy_icon = IconButton(
@@ -88,12 +88,13 @@ class Words(UserControl):
         self.title_text.update()
 
     @property
-    def tags(self) -> list[str]:
+    def tags(self) -> set[str]:
         """Tag words or topics"""
-        return sorted(self._tags)
+        return self._tags
 
     @tags.setter
     def tags(self, value: Iterable[str]):
+        value = value if isinstance(value, set) else set(value)
         log.debug("Updating the tags from `%s` to `%s`", self._tags, value)
         self._tags = value
         self._render_tags()
