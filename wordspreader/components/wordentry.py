@@ -127,7 +127,7 @@ class WordModal(ft.BottomSheet):
         if self._title.value != value:
             log.debug("Updating words from `%s` to `%s`", self._title.value, value)
             self._title.value = value
-            self._title.update()
+            self.container.update()
         else:
             log.debug("Skipping updating title as the new value evaluated equal")
 
@@ -144,7 +144,7 @@ class WordModal(ft.BottomSheet):
         if self._words.value != value:
             log.debug("Updating words from `%s` to `%s`", self._words.value, value)
             self._words.value = value
-            self._words.update()
+            self.container.update()
         else:
             log.debug("Skipping updating words as the new value evaluated equal")
 
@@ -153,19 +153,23 @@ class WordModal(ft.BottomSheet):
         self.words = ""
 
     @property
-    def tags(self) -> list[str]:
-        return sorted(self._tags_set)
+    def tags(self) -> set[str]:
+        return self._tags_set
 
     @tags.setter
     def tags(self, value: Iterable[str]):
-        new_tags = set(value)
+        new_tags = value if isinstance(value, set) else set(value)
         if new_tags != self._tags_set:
             log.debug("Updating words from `%s` to `%s`", self._tags_set, new_tags)
             self._tags_set = new_tags
-            self._tag_display.controls = [self._make_tag_obj(t) for t in self._tags_set]
-            self._tag_display.update()
+            self._tag_display.controls = [self._make_tag_obj(t.title()) for t in sorted(self.tags)]
+            self.container.update()
         else:
-            log.debug("Skipping updating tags as the new value evaluated equal")
+            log.debug(
+                "Skipping updating tags as the new value `%s` evaluated equal to `%s`",
+                new_tags,
+                self._tags_set,
+            )
 
     @tags.deleter
     def tags(self):
