@@ -30,6 +30,9 @@ from wordspreader.components.worddisplay import WordDisplay
 from wordspreader.components.wordentry import WordModal
 from wordspreader.persistence import DBPersistence
 
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
+
 
 # noinspection PyAttributeOutsideInit,PyUnusedLocal
 class WordSpreader(UserControl):
@@ -44,7 +47,7 @@ class WordSpreader(UserControl):
             [
                 Text(value=word.title),
                 Text(value=word.words),
-                word.make_tag_text(),
+                word._render_tags(),
             ],
             tight=True,
         )
@@ -61,7 +64,6 @@ class WordSpreader(UserControl):
 
     def word_entry_edit_word(self, *args, **kwargs):
         self.db.update_word(*args, **kwargs)
-        self.word_display.update()
         self.close_bs()
 
     def __init__(self, db: DBPersistence):
@@ -193,7 +195,5 @@ def main(page: Page):
     # add application's root control to the page
     page.add(app)
 
-
-import rich.traceback as tb
 
 flet.app(target=main)
