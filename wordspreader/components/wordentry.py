@@ -162,7 +162,7 @@ class WordModal(ft.BottomSheet):
         if new_tags != self._tags_set:
             log.debug("Updating words from `%s` to `%s`", self._tags_set, new_tags)
             self._tags_set = new_tags
-            self._tag_display.controls = [self._make_tag_obj(t.title()) for t in sorted(self.tags)]
+            self._tag_display.controls = [self._make_tag_obj(t) for t in sorted(self.tags)]
             self.container.update()
         else:
             log.debug(
