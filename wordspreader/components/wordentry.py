@@ -31,7 +31,7 @@ class WordModal(ft.BottomSheet):
         self.new_word = new_word
         self.edit_word = edit_word
         self._mode: MODE_TYPE = "new"
-        self._editing: Words | None
+        self._editing: Words | None = None
         self.orig_key: str | None = None
         self._header = Text("Add new Words to spread.", style=TextThemeStyle.HEADLINE_LARGE)
         self._title = TextField(label="Title")
