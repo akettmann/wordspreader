@@ -1,3 +1,6 @@
+import logging
+from collections.abc import Iterable
+
 from flet_core import (
     ButtonStyle,
     FontWeight,
@@ -14,6 +17,8 @@ from flet_core import (
     icons,
 )
 
+log = logging.getLogger(f"{__name__}.Words")
+
 
 class Words(UserControl):
     """
@@ -21,13 +26,10 @@ class Words(UserControl):
     """
 
     def __init__(
-        self, title: str, words: str, tags: set[str], edit_me: callable, delete_me: callable
+        self, title: str, words: str, tags: Iterable[str], edit_me: callable, delete_me: callable
     ):
         super().__init__()
-
-        self._title = title
-        self._words = words
-        self._tags = sorted(tags)
+        self._tags = tags
         self.edit_me = edit_me
         self.delete_me = delete_me
         self.copy_icon = IconButton(
@@ -42,9 +44,13 @@ class Words(UserControl):
                 }
             ),
         )
-        self.words_text = Text(value=self._words, max_lines=1)
-        self.title_text = Text(value=self._title)
-        self.tag_text = self.make_tag_text()
+        self.words_text = Text(value=words, max_lines=1)
+        self.title_text = Text(value=title)
+        self.tag_text = Text(
+            style=TextThemeStyle.BODY_MEDIUM,
+            italic=True,
+            weight=FontWeight.BOLD,
+        )
         self.popup_menu = PopupMenuButton(
             items=[
                 PopupMenuItem(text="Edit", on_click=lambda _: self.edit_me(self)),
@@ -57,26 +63,44 @@ class Words(UserControl):
             subtitle=self.words_text,
             trailing=self.popup_menu,
         )
-
-    def make_tag_text(self):
-        return Text(
-            value=", ".join(self.tags),
-            style=TextThemeStyle.BODY_MEDIUM,
-            italic=True,
-            weight=FontWeight.BOLD,
-        )
+        self._render_tags()
 
     @property
     def words(self):
-        return self._words
+        """The Long form content, not the title."""
+        return self.words_text.value
+
+    @words.setter
+    def words(self, value: str):
+        log.debug("Updating the words from `%s` to `%s`", self.words_text.value, value)
+        self.words_text.value = value
+        self.words_text.update()
 
     @property
     def title(self):
-        return self._title
+        """The Title, not the long form content or words"""
+        return self.title_text.value
+
+    @title.setter
+    def title(self, value: str):
+        log.debug("Updating the title from `%s` to `%s`", self.title_text.value, value)
+        self.title_text.value = value
+        self.title_text.update()
 
     @property
     def tags(self) -> list[str]:
+        """Tag words or topics"""
         return sorted(self._tags)
+
+    @tags.setter
+    def tags(self, value: Iterable[str]):
+        log.debug("Updating the tags from `%s` to `%s`", self._tags, value)
+        self._tags = value
+        self._render_tags()
+        self.tag_text.update()
+
+    def _render_tags(self):
+        self.tag_text.value = ", ".join(sorted(x.title() for x in self._tags))
 
     def build(self):
         return self.list_tile
