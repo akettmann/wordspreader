@@ -101,7 +101,7 @@ class Words(UserControl):
         self.tag_text.update()
 
     def _render_tags(self):
-        self.tag_text.value = ", ".join(sorted(x.title() for x in self._tags))
+        self.tag_text.value = ", ".join(sorted(t.title() for t in self.tags))
 
     def build(self):
         return self.list_tile
