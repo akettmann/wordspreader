@@ -189,7 +189,6 @@ class WordModal(ft.BottomSheet):
             case _:
                 # Pycharm doing weird stuff, acting like MODE_TYPE is the type it is describing.
                 # noinspection PyUnresolvedReferences
-                raise RuntimeError(
-                    f"Invalid set value, received `{value}` expected one of {MODE_TYPE.__args__}"
-                )
+                msg = f"Invalid set value, received `{value}` expected one of {MODE_TYPE.__args__}"
+                raise RuntimeError(msg)
         self._mode = value

@@ -151,7 +151,7 @@ class WordSpreader(UserControl):
         self.word_display.update()
         super().update()
 
-    def new_word(self, title: str, words: str, tags: set[str] = None):
+    def new_word(self, title: str, words: str, tags: set[str] | None = None):
         self.db.new_word(title, words, tags)
         self.close_bs()
         self.update()

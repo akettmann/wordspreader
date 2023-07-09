@@ -22,7 +22,7 @@ class DBPersistence:
     def from_file(cls, db_file: Path):
         return cls(create_engine(f"sqlite:///{db_file.resolve().absolute()}"))
 
-    def new_word(self, name: str, content: str, tags: set[str] = None) -> Word:
+    def new_word(self, name: str, content: str, tags: set[str] | None = None) -> Word:
         with self._get_session() as session:
             db_tags = self.resolve_tags(tags, session)
             word = Word(name=name, content=content, tags={})
@@ -44,7 +44,11 @@ class DBPersistence:
         return set(chain(created_tags, tags_from_db))
 
     def update_word(
-        self, name: str, content: str = None, tags: set[str] = None, new_name: str = None
+        self,
+        name: str,
+        content: str | None = None,
+        tags: set[str] | None = None,
+        new_name: str | None = None,
     ):
         """Update the word with the content, tags, new name, or all three"""
         # This first, less likely to fail
@@ -67,7 +71,7 @@ class DBPersistence:
             session.delete(word)
             session.commit()
 
-    def get_words_filtered(self, category: str = None) -> Iterator[Word]:
+    def get_words_filtered(self, category: str | None = None) -> Iterator[Word]:
         query = select(Word)
         if category is not None:
             query = query.where(Word.tags == category)
@@ -99,7 +103,7 @@ class DBPersistence:
             session.add(word)
             session.commit()
 
-    def _update_word(self, name: str, content: str = None, tags: set[str] = None):
+    def _update_word(self, name: str, content: str | None = None, tags: set[str] | None = None):
         """Doesn't change primary key, just content and/or tags"""
         with self._get_session() as session:
             word = self._get_word(session, name, True)
