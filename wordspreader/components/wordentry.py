@@ -81,7 +81,9 @@ class WordModal(ft.BottomSheet):
         self.update()
 
     def delete_tag(self, e: ControlEvent):
-        self.tags = self.tags.remove(e.control.text)
+        new_tags = self.tags
+        new_tags.remove(e.control.text.strip())
+        self.tags = new_tags
 
     def _make_tag_obj(self, name: str):
         logging.debug(f"Creating textbutton for {self.title}")
@@ -110,10 +112,7 @@ class WordModal(ft.BottomSheet):
     def save_edited_word(self):
         # If the names are the same, it should send None
         log.debug("Saving changes to word `%s`", self._editing.title)
-        new_name = None if self.orig_key == (name := self._title.value.strip()) else name
-        if new_name:
-            log.debug("Updating name of word from `%s` to `%s`", self._editing.title, new_name)
-        self.edit_word(self._editing.title, self.words, self.tags, new_name)
+        self.edit_word(self._editing.title, self.words, self.tags, self.title)
         self._editing.title = self.title
         self._editing.words = self.words
         self._editing.tags = self.tags
