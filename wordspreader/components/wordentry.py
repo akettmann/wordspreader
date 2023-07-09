@@ -27,7 +27,6 @@ MODE_TYPE = Literal["edit", "new"]
 # noinspection PyAttributeOutsideInit
 class WordModal(ft.BottomSheet):
     def __init__(self, new_word: callable, edit_word: callable):
-        super().__init__()
         self.new_word = new_word
         self.edit_word = edit_word
         self._mode: MODE_TYPE = "new"
@@ -115,11 +114,17 @@ class WordModal(ft.BottomSheet):
         self.open = True
         if self._editing != word:
             # If we are trying to edit a new word, than we last edited, replace everything with the word's content
+            log.debug("Setting up the fields from the word `%s`", word.title)
             self._editing = word
             self.mode = "edit"
             self.title = word.title
             self.words = word.words
             self.tags = word.tags
+        else:
+            log.debug(
+                "We seem to be editing the same word, `%s` leaving the last edited state instead of refreshing it.",
+                word.title,
+            )
         # If we are editing the same word again, we will leave it as it was
         self.update()
 
